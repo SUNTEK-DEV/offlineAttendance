@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#0a0a1a"
+    android:padding="16dp">
+
+    <!-- 标题 -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="考勤门禁系统演示"
+        android:textSize="24sp"
+        android:textColor="#00FFFF"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:padding="16dp" />
+
+    <!-- 科技时钟 -->
+    <com.arcsoft.arcfacedemo.widget.TechClockView
+        android:id="@+id/tech_clock"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- 输入区域 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="员工信息"
+        android:textSize="18sp"
+        android:textColor="#00CCCC"
+        android:textStyle="bold"
+        android:layout_marginTop="8dp" />
+
+    <EditText
+        android:id="@+id/et_employee_no"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:hint="工号"
+        android:textColor="#00FFFF"
+        android:textColorHint="#006666"
+        android:background="@drawable/bg_tech_edittext"
+        android:padding="12dp"
+        android:layout_marginTop="8dp" />
+
+    <EditText
+        android:id="@+id/et_name"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:hint="姓名"
+        android:textColor="#00FFFF"
+        android:textColorHint="#006666"
+        android:background="@drawable/bg_tech_edittext"
+        android:padding="12dp"
+        android:layout_marginTop="8dp" />
+
+    <EditText
+        android:id="@+id/et_face_id"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:hint="人脸ID (从人脸库获取)"
+        android:textColor="#00FFFF"
+        android:textColorHint="#006666"
+        android:background="@drawable/bg_tech_edittext"
+        android:padding="12dp"
+        android:layout_marginTop="8dp"
+        android:inputType="number" />
+
+    <!-- 按钮区域 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp">
+
+        <Button
+            android:id="@+id/btn_add_employee"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="添加员工"
+            android:background="@drawable/bg_tech_button"
+            android:textColor="#00FFFF"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btn_list_employees"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="员工列表"
+            android:background="@drawable/bg_tech_button"
+            android:textColor="#00FFFF"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
+
+        <Button
+            android:id="@+id/btn_check_in"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="上班打卡"
+            android:background="@drawable/bg_tech_button"
+            android:textColor="#00FFFF"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/btn_check_out"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="下班打卡"
+            android:background="@drawable/bg_tech_button"
+            android:textColor="#00FFFF"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/btn_door_access"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="门禁"
+            android:background="@drawable/bg_tech_button"
+            android:textColor="#00FFFF"
+            android:layout_marginStart="4dp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
+
+        <Button
+            android:id="@+id/btn_query_records"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="查询记录"
+            android:background="@drawable/bg_tech_button"
+            android:textColor="#00FFFF"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btn_generate_report"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="生成报表"
+            android:background="@drawable/bg_tech_button"
+            android:textColor="#00FFFF"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+
+    <!-- 结果显示区域 -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_tech_card"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tv_result"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="操作结果将显示在这里..."
+            android:textSize="14sp"
+            android:textColor="#00CCCC"
+            android:lineSpacingExtra="4dp" />
+    </ScrollView>
+
+</LinearLayout>

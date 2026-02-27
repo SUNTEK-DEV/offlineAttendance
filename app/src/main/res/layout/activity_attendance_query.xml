@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#0a0a1a"
+    android:padding="16dp">
+
+    <!-- 标题 -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="考勤管理系统"
+        android:textSize="24sp"
+        android:textColor="#00FFFF"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:padding="16dp" />
+
+    <!-- 科技时钟 -->
+    <com.arcsoft.arcfacedemo.widget.TechClockView
+        android:id="@+id/tech_clock"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- 提示信息 -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="提示：请通过【人脸考勤】功能进行打卡，员工管理请在【员工管理】中操作"
+        android:textSize="14sp"
+        android:textColor="#00CCCC"
+        android:gravity="center"
+        android:padding="12dp"
+        android:background="@drawable/bg_tech_card"
+        android:layout_marginBottom="16dp" />
+
+    <!-- 查询功能按钮 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
+
+        <Button
+            android:id="@+id/btn_list_employees"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="员工列表"
+            android:background="@drawable/bg_tech_button"
+            android:textColor="#00FFFF"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btn_query_records"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="考勤记录"
+            android:background="@drawable/bg_tech_button"
+            android:textColor="#00FFFF"
+            android:layout_marginStart="8dp" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btn_generate_report"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="生成考勤报表"
+        android:background="@drawable/bg_tech_button"
+        android:textColor="#00FFFF"
+        android:layout_marginTop="8dp" />
+
+    <!-- 结果显示区域 -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_tech_card"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tv_result"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="查询结果将显示在这里...\n\n点击上方按钮查看员工列表或考勤记录"
+            android:textSize="14sp"
+            android:textColor="#00CCCC"
+            android:lineSpacingExtra="4dp" />
+    </ScrollView>
+
+</LinearLayout>

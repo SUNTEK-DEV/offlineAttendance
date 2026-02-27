@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout>
+    <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".ui.activity.HomeActivity">
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="8dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="功能菜单"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:padding="8dp"
+                    android:background="#CC000000"
+                    android:textColor="@android:color/white"/>
+
+                <Button
+                    android:id="@+id/btn_diagnose"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="8dp"
+                    android:text="数据诊断"
+                    android:background="#4CAF50"
+                    android:textColor="@android:color/white"/>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:id="@+id/ll_root_view"/>
+            </LinearLayout>
+        </ScrollView>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:orientation="vertical">
+            <ImageView
+                android:layout_margin="@dimen/common_margin"
+                android:src="@drawable/ic_logo"
+                android:layout_width="@dimen/logo_width"
+                android:layout_height="@dimen/logo_height"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@{sdkVersion}"
+                android:layout_gravity="center"
+                android:layout_marginBottom="@dimen/common_margin"/>
+        </LinearLayout>
+    </FrameLayout>
+    <data>
+        <variable
+            name="sdkVersion"
+            type="String" />
+    </data>
+</layout>

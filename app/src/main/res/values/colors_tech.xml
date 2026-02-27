@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 主色调 -->
+    <color name="tech_primary">#00FFFF</color>
+    <color name="tech_primary_dark">#00CCCC</color>
+    <color name="tech_primary_light">#33FFFF</color>
+    <color name="tech_primary_alpha">#8000FFFF</color>
+
+    <!-- 背景色 -->
+    <color name="tech_bg_dark">#0a0a1a</color>
+    <color name="tech_bg_medium">#001133</color>
+    <color name="tech_bg_light">#002244</color>
+    <color name="tech_black">#000000</color>
+
+    <!-- 状态色 -->
+    <color name="tech_success">#00FF00</color>
+    <color name="tech_success_alpha">#8000FF00</color>
+    <color name="tech_warning">#FFCC00</color>
+    <color name="tech_warning_alpha">#80FFCC00</color>
+    <color name="tech_error">#FF3333</color>
+    <color name="tech_error_alpha">#80FF3333</color>
+    <color name="tech_info">#0099FF</color>
+    <color name="tech_info_alpha">#800099FF</color>
+
+    <!-- 透明度 -->
+    <color name="tech_overlay_primary">#8000FFFF</color>
+    <color name="tech_overlay_dark">#CC000000</color>
+    <color name="tech_overlay_light">#4000FFFF</color>
+
+    <!-- 文字颜色 -->
+    <color name="tech_text_primary">#00FFFF</color>
+    <color name="tech_text_secondary">#00CCCC</color>
+    <color name="tech_text_hint">#006666</color>
+    <color name="tech_white">#FFFFFF</color>
+
+    <!-- 边框颜色 -->
+    <color name="tech_border">#00FFFF</color>
+    <color name="tech_border_alpha">#4000FFFF</color>
+
+    <!-- 渐变色 -->
+    <color name="tech_gradient_start">#001133</color>
+    <color name="tech_gradient_end">#0a0a1a</color>
+</resources>
