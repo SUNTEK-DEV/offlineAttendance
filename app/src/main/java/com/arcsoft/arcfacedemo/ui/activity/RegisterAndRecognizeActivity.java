@@ -1,22 +1,36 @@
 package com.arcsoft.arcfacedemo.ui.activity;
 
 import android.Manifest;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.hardware.Camera;
+import android.nfc.NfcAdapter;
+import android.nfc.Tag;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
@@ -41,6 +55,32 @@ import java.util.List;
 
 public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTreeObserver.OnGlobalLayoutListener {
     private static final String TAG = "RegisterAndRecognize";
+
+    // 打卡方式枚举
+    private enum CheckInMode {
+        FACE_RECOGNITION,  // 人脸识别
+        NFC,              // NFC 打卡
+        QR_CODE           // 二维码打卡
+    }
+
+    private CheckInMode currentCheckInMode = CheckInMode.FACE_RECOGNITION;
+    private static final String ADMIN_PASSWORD = "123456";  // 管理员密码
+    private static final int ADMIN_CLICK_COUNT = 5;  // 管理员验证点击次数
+    private int adminClickCount = 0;  // 当前点击次数
+    private long lastClickTime = 0;   // 上次点击时间
+
+    private Button btnSwitchCheckInMode;
+
+    // NFC 相关
+    private NfcAdapter nfcAdapter;
+    private static final int REQUEST_NFC_PERMISSION = 0x002;
+
+    // NFC 键盘模拟输入相关（USB NFC 读卡器模拟键盘输出）
+    private String nfcKeyContent = "";  // NFC 读卡器输出内容
+    private boolean nfcGetFlag = true;  // 读取标志位
+
+    // 二维码输入相关（虚拟键盘）
+    private EditText qrCodeInputEditText;
 
     private DualCameraHelper rgbCameraHelper;
     private DualCameraHelper irCameraHelper;
@@ -93,6 +133,9 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
         AudioPlayer.getInstance(this);
 
         initView();
+        initNfc();
+        updateCheckInModeButton();
+        initQrCodeInput();
         openRectInfoDraw = true;
         recognizeViewModel.setDrawRectInfoTextValue(true);
 
@@ -611,6 +654,154 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
     }
 
     /**
+     * 管理员登录按钮点击事件（左下角隐藏区域，连续点击 5 次触发）
+     *
+     * @param view 管理员登录按钮
+     */
+    public void onAdminClick(View view) {
+        long currentTime = System.currentTimeMillis();
+        // 如果在 2 秒内连续点击
+        if (currentTime - lastClickTime < 2000) {
+            adminClickCount++;
+            if (adminClickCount >= ADMIN_CLICK_COUNT) {
+                // 达到 5 次，显示管理员密码验证对话框
+                adminClickCount = 0;
+                showAdminPasswordDialog();
+                return;
+            }
+        } else {
+            // 重置点击计数
+            adminClickCount = 1;
+        }
+        lastClickTime = currentTime;
+    }
+
+    /**
+     * 切换打卡方式
+     *
+     * @param view 切换按钮
+     */
+    public void switchCheckInMode(View view) {
+        // 切换打卡方式
+        switch (currentCheckInMode) {
+            case FACE_RECOGNITION:
+                currentCheckInMode = CheckInMode.NFC;
+                break;
+            case NFC:
+                currentCheckInMode = CheckInMode.QR_CODE;
+                break;
+            case QR_CODE:
+                currentCheckInMode = CheckInMode.FACE_RECOGNITION;
+                break;
+        }
+        updateCheckInModeButton();
+        handleCheckInModeChange();
+    }
+
+    /**
+     * 更新打卡方式按钮显示
+     */
+    private void updateCheckInModeButton() {
+        if (btnSwitchCheckInMode == null) {
+            btnSwitchCheckInMode = findViewById(R.id.btn_switch_check_in_mode);
+        }
+        if (btnSwitchCheckInMode != null) {
+            String modeText = "";
+            switch (currentCheckInMode) {
+                case FACE_RECOGNITION:
+                    modeText = getString(R.string.face_recognition);
+                    break;
+                case NFC:
+                    modeText = getString(R.string.nfc_check_in);
+                    break;
+                case QR_CODE:
+                    modeText = getString(R.string.qr_code_check_in);
+                    break;
+            }
+            btnSwitchCheckInMode.setText(modeText);
+        }
+    }
+
+    /**
+     * 处理打卡方式切换
+     */
+    private void handleCheckInModeChange() {
+        switch (currentCheckInMode) {
+            case FACE_RECOGNITION:
+                // 恢复相机预览
+                resumeCamera();
+                break;
+            case NFC:
+                // 检查 NFC 权限
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.NFC) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.NFC}, REQUEST_NFC_PERMISSION);
+                } else {
+                    showNfcCheckInHint();
+                }
+                break;
+            case QR_CODE:
+                // 切换到二维码模式，等待扫描枪输入
+                showQrCodeCheckInHint();
+                break;
+        }
+    }
+
+    /**
+     * 显示 NFC 打卡提示
+     */
+    private void showNfcCheckInHint() {
+        if (nfcAdapter == null || !nfcAdapter.isEnabled()) {
+            // 使用 USB NFC 读卡器模式（模拟键盘输出），不需要原生 NFC
+            showToast(getString(R.string.waiting_nfc_card_input));
+        } else {
+            showToast(getString(R.string.waiting_nfc_card_input));
+        }
+    }
+
+    /**
+     * 显示二维码打卡提示
+     */
+    private void showQrCodeCheckInHint() {
+        // 暂停相机以节省资源
+        pauseCamera();
+        showToast(getString(R.string.waiting_qr_code_input));
+        // 请求焦点到隐藏的 EditText，准备接收扫描枪输入
+        if (qrCodeInputEditText != null) {
+            qrCodeInputEditText.requestFocus();
+            qrCodeInputEditText.requestFocusFromTouch();
+        }
+    }
+
+    /**
+     * 显示管理员密码验证对话框
+     */
+    private void showAdminPasswordDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(getString(R.string.admin_password_title));
+
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        input.setHint(getString(R.string.admin_password_hint));
+        builder.setView(input);
+
+        builder.setPositiveButton(getString(R.string.ok), (dialog, which) -> {
+            String password = input.getText().toString();
+            if (ADMIN_PASSWORD.equals(password)) {
+                showToast(getString(R.string.admin_password_success));
+                // 跳转到主界面（管理菜单）
+                navigateToNewPage(HomeActivity.class);
+            } else {
+                showToast(getString(R.string.admin_password_wrong));
+            }
+        });
+        builder.setNegativeButton(getString(R.string.cancel), (dialog, which) -> {
+            dialog.cancel();
+        });
+
+        builder.show();
+    }
+
+    /**
      * 在{@link ActivityRegisterAndRecognizeBinding#dualCameraTexturePreviewRgb}第一次布局完成后，去除该监听，并且进行引擎和相机的初始化
      */
     @Override
@@ -654,6 +845,186 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
         }
         if (irCameraHelper != null) {
             irCameraHelper.stop();
+        }
+    }
+
+    /**
+     * 初始化 NFC
+     */
+    private void initNfc() {
+        nfcAdapter = NfcAdapter.getDefaultAdapter(this);
+        if (nfcAdapter == null) {
+            Log.w(TAG, "NFC 不可用");
+            return;
+        }
+        if (!nfcAdapter.isEnabled()) {
+            Log.w(TAG, "NFC 未启用");
+        }
+    }
+
+    /**
+     * 初始化二维码输入（隐藏的 EditText 用于接收虚拟键盘输入）
+     */
+    private void initQrCodeInput() {
+        // 创建一个隐藏的 EditText 来接收扫描枪输入
+        qrCodeInputEditText = new EditText(this);
+        qrCodeInputEditText.setVisibility(View.GONE);
+        qrCodeInputEditText.setInputType(EditorInfo.TYPE_NULL);  // 接收任何输入
+
+        // 监听输入完成
+        qrCodeInputEditText.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE ||
+                (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN)) {
+                String qrCodeContent = qrCodeInputEditText.getText().toString();
+                qrCodeInputEditText.setText("");  // 清空输入
+                if (currentCheckInMode == CheckInMode.QR_CODE && qrCodeContent != null && !qrCodeContent.isEmpty()) {
+                    handleQrCodeCheckIn(qrCodeContent);
+                }
+                return true;
+            }
+            return false;
+        });
+
+        // 将 EditText 添加到 FrameLayout 根布局
+        binding.dualCameraLlParent.addView(qrCodeInputEditText);
+    }
+
+    /**
+     * 处理二维码打卡（使用虚拟键盘输入）
+     */
+    private void handleQrCodeCheckIn(String qrCodeContent) {
+        if (qrCodeContent != null && !qrCodeContent.isEmpty()) {
+            Log.i(TAG, "QR Code content: " + qrCodeContent);
+            showToast(getString(R.string.qr_code_check_in_success) + ": " + qrCodeContent);
+        } else {
+            showToast(getString(R.string.qr_code_invalid));
+        }
+        // 打卡完成后切换回人脸识别
+        currentCheckInMode = CheckInMode.FACE_RECOGNITION;
+        updateCheckInModeButton();
+        resumeCamera();
+    }
+
+    /**
+     * 处理 NFC 打卡（通过键盘模拟输出）
+     */
+    private void handleNfcCheckInByContent(String content) {
+        if (content != null && !content.isEmpty()) {
+            Log.i(TAG, "NFC Check-in content: " + content);
+            showToast(getString(R.string.nfc_check_in_success) + ": " + content);
+            // 这里可以添加实际的打卡逻辑
+            // 例如：recognizeViewModel.recordNfcCheckIn(content);
+        } else {
+            showToast(getString(R.string.nfc_check_in_failed));
+        }
+        // 打卡完成后切换回人脸识别
+        currentCheckInMode = CheckInMode.FACE_RECOGNITION;
+        updateCheckInModeButton();
+        resumeCamera();
+    }
+
+    /**
+     * 处理 NFC 打卡（原生 NFC 标签）
+     */
+    private void handleNfcCheckIn(Tag tag) {
+        if (tag != null) {
+            String tagId = bytesToHex(tag.getId());
+            Log.i(TAG, "NFC Tag ID: " + tagId);
+            showToast(getString(R.string.nfc_check_in_success) + ": " + tagId);
+        } else {
+            showToast(getString(R.string.nfc_check_in_failed));
+        }
+        // 打卡完成后切换回人脸识别
+        currentCheckInMode = CheckInMode.FACE_RECOGNITION;
+        updateCheckInModeButton();
+        resumeCamera();
+    }
+
+    /**
+     * 字节数组转十六进制字符串
+     */
+    private String bytesToHex(byte[] bytes) {
+        StringBuilder result = new StringBuilder();
+        for (byte b : bytes) {
+            result.append(String.format("%02X", b));
+        }
+        return result.toString();
+    }
+
+    /**
+     * 将键值转成对应的 ASCII 码（用于 NFC 读卡器模拟键盘输出）
+     */
+    public char getCharByKeyCode(int keyCode) {
+        char outChar = 0;
+
+        if (keyCode > 6 && keyCode < 17) // 数字
+            outChar = (char) ((keyCode - 7) + 0x30);
+
+        if (keyCode > 28 && keyCode < 55) // 字母
+            outChar = (char) ((keyCode - 29) + 0x41);
+
+        return outChar;
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        // 处理 NFC 标签（原生 NFC）
+        if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(intent.getAction()) ||
+            NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction()) ||
+            NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
+            Tag tag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
+            handleNfcCheckIn(tag);
+        }
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        // 处理 NFC 读卡器模拟键盘输出（USB NFC 读卡器）
+        if (currentCheckInMode == CheckInMode.NFC) {
+            if (event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
+                if (nfcKeyContent.length() > 0) {
+                    // 显示读取到的内容
+                    Log.i(TAG, "NFC content: " + nfcKeyContent);
+                    showToast(nfcKeyContent);
+                    handleNfcCheckInByContent(nfcKeyContent);
+                    nfcKeyContent = "";
+                }
+            } else {
+                int keyCode = event.getKeyCode();
+                char keyChar = getCharByKeyCode(keyCode);
+
+                if (keyChar != 0) { // 确保是有效的字符
+                    if (nfcGetFlag) {
+                        nfcKeyContent += keyChar;
+                        nfcGetFlag = false;
+                    } else {
+                        nfcGetFlag = true;
+                    }
+                }
+            }
+            return true;  // 消费掉这个事件
+        }
+
+        // 处理扫描枪的硬键盘事件（二维码模式）
+        if (currentCheckInMode == CheckInMode.QR_CODE && qrCodeInputEditText != null) {
+            // 将事件转发给隐藏的 EditText
+            return qrCodeInputEditText.dispatchKeyEvent(event);
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_NFC_PERMISSION) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                showNfcCheckInHint();
+            } else {
+                showToast(getString(R.string.permission_denied));
+                currentCheckInMode = CheckInMode.FACE_RECOGNITION;
+                updateCheckInModeButton();
+            }
         }
     }
 }

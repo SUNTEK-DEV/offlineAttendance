@@ -88,6 +88,16 @@
 
         </FrameLayout>
 
+        <!-- RecyclerView用于显示识别结果列表 - 放在较早位置，不覆盖控制按钮 -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/dual_camera_recycler_view_person"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clickable="false"
+            android:focusable="false"
+            android:focusableInTouchMode="false"
+            app:compareResultList="@{compareResultList}" />
+
         <!-- 顶部状态栏 -->
         <LinearLayout
             android:layout_width="match_parent"
@@ -104,7 +114,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="人脸识别系统"
+                android:text="Face Recognition System"
                 android:textSize="18sp"
                 android:textColor="#00FFFF"
                 android:textStyle="bold"
@@ -114,7 +124,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="● 系统在线"
+                android:text="● System Online"
                 android:textSize="14sp"
                 android:textColor="#00FF00"
                 android:shadowColor="#00FF00"
@@ -122,64 +132,48 @@
 
         </LinearLayout>
 
-        <!-- 底部控制面板 -->
-        <LinearLayout
-            android:layout_width="wrap_content"
+        <!-- 底部控制按钮区域 -->
+        <FrameLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="16dp"
-            android:orientation="vertical"
-            android:background="@drawable/bg_control_panel"
-            android:padding="12dp">
+            android:layout_gravity="bottom"
+            android:padding="16dp">
 
-            <Button
-                android:id="@+id/btn_toggle_rect"
-                android:layout_width="120dp"
-                android:layout_height="40dp"
-                android:onClick="openRectInfoDraw"
-                android:text="显示框信息"
-                android:textColor="#00FFFF"
-                android:textSize="12sp"
-                android:background="@drawable/bg_tech_button"
-                android:stateListAnimator="@null" />
+            <!-- 左下角隐藏管理员区域（连续点击 5 次触发） -->
+            <View
+                android:id="@+id/btn_admin_login"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_gravity="bottom|start"
+                android:onClick="onAdminClick"
+                android:background="@android:color/transparent" />
 
-            <Button
-                android:id="@+id/btn_register"
-                android:layout_width="120dp"
-                android:layout_height="40dp"
-                android:layout_marginTop="8dp"
-                android:onClick="register"
-                android:text="注册人脸"
-                android:textColor="#00FFFF"
-                android:textSize="12sp"
-                android:background="@drawable/bg_tech_button"
-                android:stateListAnimator="@null" />
+            <!-- 右下角切换打卡方式按钮 -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:background="@drawable/bg_control_panel"
+                android:padding="12dp"
+                android:elevation="10dp"
+                android:clickable="true"
+                android:focusable="true">
 
-            <Button
-                android:id="@+id/btn_settings"
-                android:layout_width="120dp"
-                android:layout_height="40dp"
-                android:layout_marginTop="8dp"
-                android:onClick="setting"
-                android:text="参数设置"
-                android:textColor="#00FFFF"
-                android:textSize="12sp"
-                android:background="@drawable/bg_tech_button"
-                android:stateListAnimator="@null" />
+                <Button
+                    android:id="@+id/btn_switch_check_in_mode"
+                    android:layout_width="160dp"
+                    android:layout_height="80dp"
+                    android:onClick="switchCheckInMode"
+                    android:text="@string/switch_check_in_mode"
+                    android:textColor="#00FFFF"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/bg_tech_button"
+                    android:stateListAnimator="@null"
+                    android:elevation="8dp" />
 
-            <Button
-                android:id="@+id/btn_debug"
-                android:layout_width="120dp"
-                android:layout_height="40dp"
-                android:layout_marginTop="8dp"
-                android:onClick="recognizeDebug"
-                android:text="异常分析"
-                android:textColor="#00FFFF"
-                android:textSize="12sp"
-                android:background="@drawable/bg_tech_button"
-                android:stateListAnimator="@null" />
-
-        </LinearLayout>
+            </LinearLayout>
+        </FrameLayout>
 
         <!-- 识别结果提示 -->
         <TextView
@@ -199,13 +193,8 @@
             android:textStyle="bold"
             android:shadowColor="#00FF00"
             android:shadowRadius="10"
+            android:elevation="5dp"
             android:visibility="@{(recognizeNotice == null || recognizeNotice.length() == 0)?View.GONE:View.VISIBLE}" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/dual_camera_recycler_view_person"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:compareResultList="@{compareResultList}" />
 
     </FrameLayout>
 

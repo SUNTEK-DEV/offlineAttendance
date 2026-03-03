@@ -17,7 +17,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                android:text="暂无员工，点击右下角添加"
+                android:text="No employees. Click bottom right to add"
                 android:visibility="@{(hasEmployee==null||hasEmployee)?View.INVISIBLE:View.VISIBLE}" />
 
             <androidx.recyclerview.widget.RecyclerView
@@ -44,7 +44,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 app:layout_scrollFlags="scroll|enterAlways"
-                app:title="员工管理" />
+                app:title="Employee Management" />
         </com.google.android.material.appbar.AppBarLayout>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton

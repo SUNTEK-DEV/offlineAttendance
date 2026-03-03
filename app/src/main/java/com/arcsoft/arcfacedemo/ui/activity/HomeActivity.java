@@ -91,7 +91,7 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
         activityHomeBinding.llRootView.addView(new NavigateItemView(this, R.drawable.ic_settings, getString(R.string.page_settings), RecognizeSettingsActivity.class));
 
         // 添加考勤查询入口（替代原来的考勤门禁管理）
-        activityHomeBinding.llRootView.addView(new NavigateItemView(this, android.R.drawable.ic_menu_agenda, "考勤查询", com.arcsoft.arcfacedemo.demo.AttendanceQueryActivity.class));
+        activityHomeBinding.llRootView.addView(new NavigateItemView(this, android.R.drawable.ic_menu_agenda, "Attendance Query", com.arcsoft.arcfacedemo.demo.AttendanceQueryActivity.class));
 
         activeView = new NavigateItemView(this, R.drawable.ic_online_active, getString(R.string.active_engine), "", ActivationActivity.class);
         activityHomeBinding.llRootView.addView(activeView);
@@ -115,7 +115,7 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
     private void diagnoseData() {
         new Thread(() -> {
             StringBuilder sb = new StringBuilder();
-            sb.append("========== 数据诊断 ==========\n\n");
+            sb.append("========== Data Diagnostics ==========\n\n");
 
             try {
                 // 1. 查询员工数据
@@ -125,15 +125,15 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
                 java.util.List<com.arcsoft.arcfacedemo.employee.model.EmployeeEntity> employees =
                         employeeService.getAllEmployees().blockingGet();
 
-                sb.append("【员工数据】\n");
-                sb.append("员工数量: ").append(employees.size()).append("\n\n");
+                sb.append("[Employee Data]\n");
+                sb.append("Employee Count: ").append(employees.size()).append("\n\n");
 
                 for (com.arcsoft.arcfacedemo.employee.model.EmployeeEntity emp : employees) {
                     sb.append("━━━━━━━━━━━━━━━━━━━━\n");
-                    sb.append("员工ID: ").append(emp.getEmployeeId()).append("\n");
-                    sb.append("工号: ").append(emp.getEmployeeNo()).append("\n");
-                    sb.append("姓名: ").append(emp.getName()).append("\n");
-                    sb.append("人脸ID: ").append(emp.getFaceId()).append("\n");
+                    sb.append("Employee ID: ").append(emp.getEmployeeId()).append("\n");
+                    sb.append("Employee No: ").append(emp.getEmployeeNo()).append("\n");
+                    sb.append("Name: ").append(emp.getName()).append("\n");
+                    sb.append("Face ID: ").append(emp.getFaceId()).append("\n");
                     sb.append("\n");
                 }
 
@@ -143,18 +143,18 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
 
                 java.util.List<com.arcsoft.arcfacedemo.facedb.entity.FaceEntity> faces = faceDao.getAllFaces();
 
-                sb.append("\n【人脸数据】\n");
-                sb.append("人脸数量: ").append(faces.size()).append("\n\n");
+                sb.append("\n[Face Data]\n");
+                sb.append("Face Count: ").append(faces.size()).append("\n\n");
 
                 for (com.arcsoft.arcfacedemo.facedb.entity.FaceEntity face : faces) {
                     sb.append("━━━━━━━━━━━━━━━━━━━━\n");
-                    sb.append("人脸ID: ").append(face.getFaceId()).append("\n");
-                    sb.append("用户名: ").append(face.getUserName()).append("\n");
+                    sb.append("Face ID: ").append(face.getFaceId()).append("\n");
+                    sb.append("Username: ").append(face.getUserName()).append("\n");
                     sb.append("\n");
                 }
 
                 // 3. 检查关联
-                sb.append("\n【数据关联检查】\n");
+                sb.append("\n[Data Relationship Check]\n");
                 for (com.arcsoft.arcfacedemo.employee.model.EmployeeEntity emp : employees) {
                     if (emp.getFaceId() > 0) {
                         boolean faceExists = false;
@@ -166,24 +166,24 @@ public class HomeActivity extends BaseActivity implements View.OnClickListener {
                             }
                         }
                         if (!faceExists) {
-                            sb.append("✗ ").append(emp.getName()).append(" -> faceId=").append(emp.getFaceId()).append(" (人脸不存在)\n");
+                            sb.append("✗ ").append(emp.getName()).append(" -> faceId=").append(emp.getFaceId()).append(" (Face not exist)\n");
                         }
                     } else {
-                        sb.append("! ").append(emp.getName()).append(" -> 未注册人脸\n");
+                        sb.append("! ").append(emp.getName()).append(" -> No face registered\n");
                     }
                 }
 
             } catch (Exception e) {
-                sb.append("\n诊断失败: ").append(e.getMessage());
+                sb.append("\nDiagnostics failed: ").append(e.getMessage());
                 e.printStackTrace();
             }
 
             String result = sb.toString();
             runOnUiThread(() -> {
                 new android.app.AlertDialog.Builder(this)
-                        .setTitle("数据诊断结果")
+                        .setTitle("Data Diagnostics Result")
                         .setMessage(result)
-                        .setPositiveButton("确定", null)
+                        .setPositiveButton("OK", null)
                         .show();
             });
         }).start();

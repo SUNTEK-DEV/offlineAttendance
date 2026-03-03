@@ -3,15 +3,15 @@
 
 
     <!--通用提示-->
-    <string name="loading">加载中…</string>
-    <string name="please_wait">请稍等…</string>
-    <string name="ok">确认</string>
-    <string name="cancel">取消</string>
-    <string name="delete">删除</string>
-    <string name="undo">撤销</string>
-    <string name="stopped">已停止</string>
-    <string name="stop">停止</string>
-    <string name="notice">提示</string>
+    <string name="loading">Loading...</string>
+    <string name="please_wait">Please wait...</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="undo">Undo</string>
+    <string name="stopped">Stopped</string>
+    <string name="stop">Stop</string>
+    <string name="notice">Notice</string>
 
     <!--README相关-->
     <string name="title_introduction">简介</string>
@@ -28,45 +28,45 @@
 
 
     <!--激活相关-->
-    <string name="active_engine">激活引擎</string>
-    <string name="active_success">激活引擎成功</string>
-    <string name="already_activated">已激活</string>
-    <string name="active_key_activated">该激活码已被其他设备使用</string>
-    <string name="dont_need_active_anymore">引擎已激活，无需再次激活</string>
-    <string name="active_failed">引擎激活失败，错误码：%d， 错误码常量名：%s</string>
-    <string name="not_activated">SDK未激活</string>
+    <string name="active_engine">Activate Engine</string>
+    <string name="active_success">Engine activated successfully</string>
+    <string name="already_activated">Activated</string>
+    <string name="active_key_activated">This activation code has been used by another device</string>
+    <string name="dont_need_active_anymore">Engine already activated, no need to activate again</string>
+    <string name="active_failed">Engine activation failed, error code: %d, error code constant: %s</string>
+    <string name="not_activated">SDK not activated</string>
     <string name="app_id">appId</string>
     <string name="sdk_key">sdkKey</string>
     <string name="active_key">activeKey</string>
-    <string name="active_online">在线激活</string>
-    <string name="active_offline">离线激活</string>
-    <string name="copy_device_finger">复制设备信息</string>
-    <string name="description_copy_device_finger">将设备信息复制到剪贴板，可存储到本地文件，上传到开放平台生成离线授权文件用于离线激活</string>
-    <string name="device_info_copied">设备信息：\n%s\n已复制</string>
-    <string name="get_device_finger_failed">获取设备信息失败，错误码：%d</string>
-    <string name="notice_please_active_before_use">SDK未激活，请激活后使用！</string>
-    <string name="read_local_config_and_active">读取本地配置文件并激活</string>
-    <string name="notice_active_online">联网环境下，支持在线激活，可读取本地配置文件，本地配置文件路径为：/sdcard/activeConfig.txt，格式：\nAPP_ID:XXXXXXXXXXXXXXX\nSDK_KEY:XXXXXXXXXXXXXXX\nACTIVE_KEY:XXXX-XXXX-XXXX-XXXX</string>
-    <string name="notice_active_offline">无网络环境下，支持离线激活，请将设备授权文件放置在sdcard根目录下，命名为%s</string>
+    <string name="active_online">Online Activation</string>
+    <string name="active_offline">Offline Activation</string>
+    <string name="copy_device_finger">Copy Device Info</string>
+    <string name="description_copy_device_finger">Copy device info to clipboard, can save to local file and upload to open platform to generate offline license file for offline activation</string>
+    <string name="device_info_copied">Device info:\n%s\nCopied</string>
+    <string name="get_device_finger_failed">Failed to get device info, error code: %d</string>
+    <string name="notice_please_active_before_use">SDK not activated, please activate before use!</string>
+    <string name="read_local_config_and_active">Read local config file and activate</string>
+    <string name="notice_active_online">In online environment, online activation is supported. Can read local config file at: /sdcard/activeConfig.txt, format:\nAPP_ID:XXXXXXXXXXXXXXX\nSDK_KEY:XXXXXXXXXXXXXXX\nACTIVE_KEY:XXXX-XXXX-XXXX-XXXX</string>
+    <string name="notice_active_offline">In offline environment, offline activation is supported. Please place device license file in sdcard root directory, named as %s</string>
     <string name="active_file_name">active_result.dat</string>
-    <string name="read_config_failed">读取本地文件失败，请检查格式</string>
+    <string name="read_config_failed">Failed to read local file, please check format</string>
 
 
     <!--界面适配-->
-    <string name="recognize_settings">参数设置</string>
+    <string name="recognize_settings">Settings</string>
 
     <!--动态库相关-->
     <string name="library_not_found">未找到库文件，请检查是否有将.so文件放至工程的 app\\src\\main\\jniLibs 目录下</string>
 
     <!--各个界面获取本地图片失败提示-->
-    <string name="get_picture_failed">获取图片失败</string>
+    <string name="get_picture_failed">Failed to get picture</string>
 
     <!--各个界面获取权限失败时的提示-->
-    <string name="permission_denied">权限被拒绝！</string>
+    <string name="permission_denied">Permission denied!</string>
 
     <!--各个界面引擎初始化失败的提示-->
-    <string name="init_failed">引擎初始化失败，错误码为：%d，错误码常量名为：%s</string>
-    <string name="engine_not_initialized">引擎未初始化，错误码为 %d</string>
+    <string name="init_failed">Engine initialization failed, error code: %d, error code constant: %s</string>
+    <string name="engine_not_initialized">Engine not initialized, error code: %d</string>
 
     <!--人脸属性检测（图片） 界面-->
     <string name="start_process">属性分析</string>
@@ -74,15 +74,15 @@
     <string name="processing">处理中</string>
 
     <!--单目、双目识别注册界面-->
-    <string name="register">注册</string>
-    <string name="switch_camera">切换相机</string>
-    <string name="switch_camera_failed">切换相机失败</string>
-    <string name="recognize_failed_notice">未通过:%s</string>
-    <string name="recognize_success_notice">通过:%s</string>
-    <string name="low_confidence_level">人脸置信度低</string>
-    <string name="specific_engine_init_failed">%s 初始化失败，错误码：%d\n错误码常量名：%s</string>
-    <string name="notice_change_detect_degree">相机已切换，若无法检测到人脸，需要在配置界面修改视频模式人脸检测角度</string>
-    <string name="liveness_detect">活体检测</string>
+    <string name="register">Register</string>
+    <string name="switch_camera">Switch Camera</string>
+    <string name="switch_camera_failed">Failed to switch camera</string>
+    <string name="recognize_failed_notice">Failed: %s</string>
+    <string name="recognize_success_notice">Passed: %s</string>
+    <string name="low_confidence_level">Low face confidence</string>
+    <string name="specific_engine_init_failed">%s initialization failed, error code: %d\nError code constant: %s</string>
+    <string name="notice_change_detect_degree">Camera switched. If face cannot be detected, please change the face detection angle in settings</string>
+    <string name="liveness_detect">Liveness Detect</string>
     <string name="camera_rgb">RGB CAMERA</string>
     <string name="camera_ir">IR CAMERA</string>
     <string name="camera_rgb_preview_size">RGB CAMERA\n%dx%d</string>
@@ -92,32 +92,32 @@
     <string name="draw_ir_rect_mirror_vertical">IR人脸框垂直镜像绘制</string>
 
     <!--配置、功能选择界面-->
-    <string name="page_readme">简介</string>
-    <string name="page_ir_face_recognize">人脸考勤</string>
-    <string name="page_liveness_detect">活体检测</string>
-    <string name="page_single_image">人脸属性</string>
-    <string name="page_face_compare">图片1:1比对</string>
-    <string name="page_face_manage">员工管理</string>
-    <string name="page_settings">参数设置</string>
-    <string name="page_debug">异常分析</string>
-    <string name="page_calculate_data_length">计算数据长度</string>
+    <string name="page_readme">Introduction</string>
+    <string name="page_ir_face_recognize">Face Attendance</string>
+    <string name="page_liveness_detect">Liveness Detect</string>
+    <string name="page_single_image">Face Attributes</string>
+    <string name="page_face_compare">Face Compare 1:1</string>
+    <string name="page_face_manage">Employee Management</string>
+    <string name="page_settings">Settings</string>
+    <string name="page_debug">Debug Analysis</string>
+    <string name="page_calculate_data_length">Calculate Data Length</string>
 
 
     <!-- 人脸管理-->
-    <string name="tip_no_registered_face">未注册人脸，请点击右下角图标进行注册，\n默认待批量注册图存放目录：%s</string>
-    <string name="please_put_photos">请将需要注册的人脸照片放在\n%s\n目录下</string>
+    <string name="tip_no_registered_face">No registered faces. Click the icon at bottom right to register.\nDefault batch registration directory: %s</string>
+    <string name="please_put_photos">Please place face photos to register in\n%s\ndirectory</string>
     <string name="label_face_id">id: %d</string>
-    <string name="dialog_title_change_name">修改名称</string>
-    <string name="name_should_not_be_empty">名称不可为空</string>
-    <string name="register_success">注册成功</string>
-    <string name="register_failed">注册失败</string>
-    <string name="face_cleared">人脸库已清空</string>
-    <string name="face_deleted">已删除</string>
-    <string name="register_select_from_album">选择照片注册</string>
-    <string name="batch_register_from_file">本地批量注册</string>
-    <string name="clear_all_faces">清空所有人脸</string>
-    <string name="registering_please_wait">注册中，请稍等</string>
-    <string name="register_progress">当前/失败/所有：%d / %d / %d</string>
+    <string name="dialog_title_change_name">Change Name</string>
+    <string name="name_should_not_be_empty">Name should not be empty</string>
+    <string name="register_success">Registration successful</string>
+    <string name="register_failed">Registration failed</string>
+    <string name="face_cleared">Face database cleared</string>
+    <string name="face_deleted">Deleted</string>
+    <string name="register_select_from_album">Select Photo to Register</string>
+    <string name="batch_register_from_file">Batch Register from File</string>
+    <string name="clear_all_faces">Clear All Faces</string>
+    <string name="registering_please_wait">Registering, please wait</string>
+    <string name="register_progress">Current/Failed/Total: %d / %d / %d</string>
 
     <!--人脸比对1:n（图片vs图片） 界面-->
     <string name="choose_main_image">选择注册照</string>
@@ -153,8 +153,8 @@
     <string name="ft_op_270">视频模式仅检测270度</string>
     <string name="ft_op_all">视频模式全方向人脸检测</string>
 
-    <string name="dialog_delete_face_config">确认删除 \'%s\' 的人脸？</string>
-    <string name="label_face_manage">人脸管理</string>
+    <string name="dialog_delete_face_config">Confirm to delete face of \'%s\'?</string>
+    <string name="label_face_manage">Face Management</string>
 
     <!-- 配置的小标题 -->
     <string name="settings_preview_adapt">相机预览设置</string>
@@ -280,6 +280,36 @@
     <!-- 默认项-->
     <string name="default_recognize_orient_priority">ASF_OP_ALL_OUT</string>
 
+
+    <!-- 打卡方式 -->
+    <string name="check_in_mode">打卡方式</string>
+    <string name="face_recognition">人脸识别</string>
+    <string name="nfc_check_in">NFC打卡</string>
+    <string name="qr_code_check_in">二维码打卡</string>
+    <string name="switch_check_in_mode">切换打卡方式</string>
+    <string name="admin_login">管理员登录</string>
+
+    <!-- 管理员验证 -->
+    <string name="admin_password_title">管理员验证</string>
+    <string name="admin_password_hint">请输入管理员密码</string>
+    <string name="admin_password_wrong">密码错误</string>
+    <string name="admin_password_success">验证成功</string>
+    <string name="admin_menu">管理菜单</string>
+
+    <!-- NFC -->
+    <string name="nfc_not_available">NFC不可用</string>
+    <string name="nfc_not_enabled">NFC未启用，请在设置中开启NFC</string>
+    <string name="nfc_tag_detected">检测到NFC标签</string>
+    <string name="nfc_check_in_success">NFC打卡成功</string>
+    <string name="nfc_check_in_failed">NFC打卡失败</string>
+    <string name="waiting_nfc_card_input">请将 NFC 卡靠近读卡器...</string>
+
+    <!-- 二维码 -->
+    <string name="qr_code_scanner">二维码扫描</string>
+    <string name="qr_code_check_in_success">二维码打卡成功</string>
+    <string name="qr_code_check_in_failed">二维码打卡失败</string>
+    <string name="qr_code_invalid">无效的二维码</string>
+    <string name="waiting_qr_code_input">等待扫描二维码...</string>
 
     <string name="app_permission_detail">
         <b>隐私政策</b>

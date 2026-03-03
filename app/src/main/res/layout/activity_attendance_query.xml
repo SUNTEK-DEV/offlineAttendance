@@ -10,7 +10,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="考勤管理系统"
+        android:text="Attendance Management"
         android:textSize="24sp"
         android:textColor="#00FFFF"
         android:textStyle="bold"
@@ -28,7 +28,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="提示：请通过【人脸考勤】功能进行打卡，员工管理请在【员工管理】中操作"
+        android:text="Note: Please use [Face Attendance] for check-in. Employee management is in [Employee Management]"
         android:textSize="14sp"
         android:textColor="#00CCCC"
         android:gravity="center"
@@ -48,7 +48,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="员工列表"
+            android:text="Employee List"
             android:background="@drawable/bg_tech_button"
             android:textColor="#00FFFF"
             android:layout_marginEnd="8dp" />
@@ -58,7 +58,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="考勤记录"
+            android:text="Attendance Records"
             android:background="@drawable/bg_tech_button"
             android:textColor="#00FFFF"
             android:layout_marginStart="8dp" />
@@ -68,7 +68,7 @@
         android:id="@+id/btn_generate_report"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="生成考勤报表"
+        android:text="Generate Attendance Report"
         android:background="@drawable/bg_tech_button"
         android:textColor="#00FFFF"
         android:layout_marginTop="8dp" />
@@ -86,7 +86,7 @@
             android:id="@+id/tv_result"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="查询结果将显示在这里...\n\n点击上方按钮查看员工列表或考勤记录"
+            android:text="Query results will be displayed here...\n\nClick buttons above to view employee list or attendance records"
             android:textSize="14sp"
             android:textColor="#00CCCC"
             android:lineSpacingExtra="4dp" />

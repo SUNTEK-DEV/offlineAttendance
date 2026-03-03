@@ -18,7 +18,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="功能菜单"
+                    android:text="Menu"
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:padding="8dp"
@@ -30,7 +30,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_margin="8dp"
-                    android:text="数据诊断"
+                    android:text="Data Diagnostics"
                     android:background="#4CAF50"
                     android:textColor="@android:color/white"/>
 
