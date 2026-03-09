@@ -296,17 +296,17 @@ public class FaceRectView extends View {
                 int defX = rect.left;
                 int defY = rect.bottom + rect.width() / 8;
 
-                String strInfo0 = "是否在边界内: " + drawInfo.getIsWithinBoundary();
-                canvas.drawText(strInfo0, defX, defY, paint);
-
-                String strInfo1 = "戴眼镜: " + attributeInfo.getWearGlasses();
-                canvas.drawText(strInfo1, defX, defY + textSize, paint);
-
-                String strInfo2 = "眼睛睁开: [" + attributeInfo.getLeftEyeOpen() + "," + attributeInfo.getRightEyeOpen() + "]";
-                canvas.drawText(strInfo2, rect.left, defY + textSize * 2, paint);
-
-                String strInfo3 = "嘴巴合上: " + attributeInfo.getMouthClose();
-                canvas.drawText(strInfo3, rect.left, defY + textSize * 3, paint);
+//                String strInfo0 = "是否在边界内: " + drawInfo.getIsWithinBoundary();
+//                canvas.drawText(strInfo0, defX, defY, paint);
+//
+//                String strInfo1 = "戴眼镜: " + attributeInfo.getWearGlasses();
+//                canvas.drawText(strInfo1, defX, defY + textSize, paint);
+//
+//                String strInfo2 = "眼睛睁开: [" + attributeInfo.getLeftEyeOpen() + "," + attributeInfo.getRightEyeOpen() + "]";
+//                canvas.drawText(strInfo2, rect.left, defY + textSize * 2, paint);
+//
+//                String strInfo3 = "嘴巴合上: " + attributeInfo.getMouthClose();
+//                canvas.drawText(strInfo3, rect.left, defY + textSize * 3, paint);
             }
         }
     }

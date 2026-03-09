@@ -550,7 +550,7 @@ public class RecognizeViewModel extends ViewModel implements RecognizeCallback {
                     // 播放欢迎语（需要在 AudioPlayer 中添加欢迎语播放方法）
                     // AudioPlayer.getInstance(ArcFaceApplication.getApplication()).playWelcome();
 
-                    String resultMsg = "识别到陌生人";
+                    String resultMsg = "Recognize strangers";
                     punchResult.postValue(resultMsg);
                 }
             }
@@ -600,7 +600,7 @@ public class RecognizeViewModel extends ViewModel implements RecognizeCallback {
                     public void onError(String error) {
                         // 打卡失败
                         Log.e(TAG, "Attendance error: " + error);
-                        punchResult.postValue("打卡失败: " + error);
+                        punchResult.postValue("Check-in failed: " + error);
 
                         // 播放失败提示音（使用已打卡提示音代替）
                         AudioPlayer.getInstance(ArcFaceApplication.getApplication()).playAlreadyPunched();
@@ -639,7 +639,7 @@ public class RecognizeViewModel extends ViewModel implements RecognizeCallback {
                 sb.append("（正常）");
             }
         } else {
-            sb.append("打卡成功");
+            sb.append("Check-in successful");
         }
 
         // 添加时间

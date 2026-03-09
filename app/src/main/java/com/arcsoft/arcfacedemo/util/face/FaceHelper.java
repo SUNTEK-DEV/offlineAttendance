@@ -591,7 +591,7 @@ public class FaceHelper implements FaceListener {
             changeLiveness(trackId, liveness);
             // 非活体，重试
             if (liveness != LivenessInfo.ALIVE) {
-                noticeCurrentStatus("活体检测未通过");
+                noticeCurrentStatus("The live detection failed");
                 // 延迟 FAIL_RETRY_INTERVAL 后，将该人脸状态置为UNKNOWN，帧回调处理时会重新进行活体检测
                 retryLivenessDetectDelayed(trackId);
             }
@@ -614,7 +614,7 @@ public class FaceHelper implements FaceListener {
         if (timerDisposable != null && !timerDisposable.isDisposed()) {
             timerDisposable.dispose();
         }
-        timerDisposable = Observable.timer(1500, TimeUnit.MILLISECONDS)
+        timerDisposable = Observable.timer(3500, TimeUnit.MILLISECONDS)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(aLong -> {
                     if (recognizeCallback != null) {
@@ -633,8 +633,8 @@ public class FaceHelper implements FaceListener {
         boolean pass = compareResult.getSimilar() > recognizeConfiguration.getSimilarThreshold();
         recognizeCallback.onRecognized(compareResult, getRecognizeInfo(recognizeInfoMap, trackId).getLiveness(), pass);
         if (pass) {
-            setName(trackId, "识别通过");
-            noticeCurrentStatus("识别通过");
+            setName(trackId, "recognition passed");
+            noticeCurrentStatus("recognition passed");
             Log.i(TAG,"可进行下一步操作，比如打卡成功！可以开门！");
 
             // 调用考勤打卡
@@ -644,7 +644,7 @@ public class FaceHelper implements FaceListener {
 
             changeRecognizeStatus(trackId, RequestFeatureStatus.SUCCEED);
         } else {
-            noticeCurrentStatus("未通过：NOT_REGISTERED");
+            noticeCurrentStatus("no pass：NOT_REGISTERED");
             retryRecognizeDelayed(trackId);
         }
     }

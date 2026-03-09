@@ -71,7 +71,7 @@ public class LocalAttendanceIntegration {
         String imagePath = generateImagePath(userName);
 
         // 调用本地打卡服务
-        attendanceService.checkInByFaceId(faceId, imagePath)
+        attendanceService.checkInByFace(faceId, userName, imagePath)
                 .subscribe(new SingleObserver<CheckResult>() {
                     @Override
                     public void onSubscribe(Disposable d) {
@@ -80,8 +80,14 @@ public class LocalAttendanceIntegration {
 
                     @Override
                     public void onSuccess(CheckResult result) {
-                        Log.i(TAG, "Check in success: " + result.toString());
-                        callback.onAttendanceResult(result);
+                        Log.i(TAG, "Check in result: " + result.toString());
+                        if (result != null && result.isSuccess()) {
+                            callback.onAttendanceResult(result);
+                        } else if (result != null) {
+                            callback.onError(result.getError());
+                        } else {
+                            callback.onError("打卡失败: result is null");
+                        }
                     }
 
                     @Override

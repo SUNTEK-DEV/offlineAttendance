@@ -37,6 +37,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.arcsoft.arcfacedemo.R;
 import com.arcsoft.arcfacedemo.databinding.ActivityRegisterAndRecognizeBinding;
+import com.arcsoft.arcfacedemo.attendance.model.CheckResult;
+import com.arcsoft.arcfacedemo.attendance.service.AttendanceService;
 import com.arcsoft.arcfacedemo.ui.model.PreviewConfig;
 import com.arcsoft.arcfacedemo.ui.viewmodel.RecognizeViewModel;
 import com.arcsoft.arcfacedemo.util.ConfigUtil;
@@ -53,34 +55,38 @@ import com.arcsoft.face.ErrorInfo;
 
 import java.util.List;
 
+import io.reactivex.SingleObserver;
+import io.reactivex.disposables.Disposable;
+
 public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTreeObserver.OnGlobalLayoutListener {
     private static final String TAG = "RegisterAndRecognize";
 
-    // 打卡方式枚举
+    // Check-in mode enumeration
     private enum CheckInMode {
-        FACE_RECOGNITION,  // 人脸识别
-        NFC,              // NFC 打卡
-        QR_CODE           // 二维码打卡
+        FACE_RECOGNITION,  // Face Recognition
+        NFC,              // NFC Check-in
+        QR_CODE           // QR Code Check-in
     }
 
     private CheckInMode currentCheckInMode = CheckInMode.FACE_RECOGNITION;
-    private static final String ADMIN_PASSWORD = "123456";  // 管理员密码
-    private static final int ADMIN_CLICK_COUNT = 5;  // 管理员验证点击次数
-    private int adminClickCount = 0;  // 当前点击次数
-    private long lastClickTime = 0;   // 上次点击时间
+    private static final String ADMIN_PASSWORD = "123456";  // Admin password
+    private static final int ADMIN_CLICK_COUNT = 5;  // Admin verification click count
+    private int adminClickCount = 0;  // Current click count
+    private long lastClickTime = 0;   // Last click time
 
     private Button btnSwitchCheckInMode;
 
-    // NFC 相关
+    // NFC related
     private NfcAdapter nfcAdapter;
     private static final int REQUEST_NFC_PERMISSION = 0x002;
 
-    // NFC 键盘模拟输入相关（USB NFC 读卡器模拟键盘输出）
-    private String nfcKeyContent = "";  // NFC 读卡器输出内容
-    private boolean nfcGetFlag = true;  // 读取标志位
+    // NFC keyboard simulation input (USB NFC reader simulates keyboard output)
+    private String nfcKeyContent = "";  // NFC reader output content
+    private boolean nfcGetFlag = true;  // Read flag
 
-    // 二维码输入相关（虚拟键盘）
+    // QR code input related (virtual keyboard)
     private EditText qrCodeInputEditText;
+    private AttendanceService attendanceService;
 
     private DualCameraHelper rgbCameraHelper;
     private DualCameraHelper irCameraHelper;
@@ -94,7 +100,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
     private static final int NAVIGATE_TO_RECOGNIZE_DEBUG_ACTIVITY = 2;
 
     /**
-     * 所需的所有权限信息
+     * All required permissions
      */
     private static final String[] NEEDED_PERMISSIONS = new String[]{
             Manifest.permission.CAMERA,
@@ -113,8 +119,9 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = DataBindingUtil.setContentView(this, R.layout.activity_register_and_recognize);
-        Log.i(TAG,"进入到了人脸识别中-----");
-        //保持亮屏
+        attendanceService = AttendanceService.getInstance(this);
+        Log.i(TAG,"杩涘叆鍒颁簡浜鸿劯璇嗗埆涓?----");
+        // Keep screen on
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -123,12 +130,12 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
             getWindow().setAttributes(attributes);
         }
 
-        // Activity启动后就锁定为启动时的方向
+        // Activity鍚姩鍚庡氨閿佸畾涓哄惎鍔ㄦ椂鐨勬柟鍚?
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LOCKED);
-        initData();//初始化数据
+        initData();// Initialize data
         initViewModel();
 
-        // 初始化音频播放器
+        // Initialize audio player
         Log.i(TAG, "Initializing AudioPlayer...");
         AudioPlayer.getInstance(this);
 
@@ -139,12 +146,12 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
         openRectInfoDraw = true;
         recognizeViewModel.setDrawRectInfoTextValue(true);
 
-        // 启动科技感扫描线动画
+        // Start tech scan line animation
         startScanLineAnimation();
     }
 
     /**
-     * 启动扫描线动画
+     * Start scan line animation
      */
     private void startScanLineAnimation() {
         View scanLine = binding.getRoot().findViewById(R.id.scan_line);
@@ -231,10 +238,10 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
             binding.setDrawRectInfoText(drawRectInfoText);
         });
 
-        // 初始化打卡仓库
+        // 鍒濆鍖栨墦鍗′粨搴?
         recognizeViewModel.initAttendanceRepository(this);
 
-        // 观察打卡结果
+        // 瑙傚療鎵撳崱缁撴灉
         recognizeViewModel.getPunchResult().observe(this, punchResult -> {
             showToast(punchResult);
             Log.i(TAG, "Punch result: " + punchResult);
@@ -245,14 +252,14 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
         if (!DualCameraHelper.hasDualCamera() || livenessType != LivenessType.IR) {
             binding.flRecognizeIr.setVisibility(View.GONE);
         }
-        //在布局结束后才做初始化操作
+        //鍦ㄥ竷灞€缁撴潫鍚庢墠鍋氬垵濮嬪寲鎿嶄綔
         binding.dualCameraTexturePreviewRgb.getViewTreeObserver().addOnGlobalLayoutListener(this);
         binding.setCompareResultList(recognizeViewModel.getCompareResultList().getValue());
     }
 
     @Override
     protected void onDestroy() {
-        // 释放音频播放器资源
+        // 閲婃斁闊抽鎾斁鍣ㄨ祫婧?
         AudioPlayer.getInstance(this).release();
 
         if (irCameraHelper != null) {
@@ -281,16 +288,16 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
 
 
     /**
-     * 调整View的宽高，使2个预览同时显示
+     * 璋冩暣View鐨勫楂橈紝浣?涓瑙堝悓鏃舵樉绀?
      *
-     * @param previewView        显示预览数据的view
-     * @param faceRectView       画框的view
-     * @param previewSize        预览大小
-     * @param displayOrientation 相机旋转角度
-     * @return 调整后的LayoutParams
+     * @param previewView        鏄剧ず棰勮鏁版嵁鐨剉iew
+     * @param faceRectView       鐢绘鐨剉iew
+     * @param previewSize        棰勮澶у皬
+     * @param displayOrientation 鐩告満鏃嬭浆瑙掑害
+     * @return 璋冩暣鍚庣殑LayoutParams
      */
     /**
-     * 调整View的宽高，使2个预览同时显示（限制不超过屏幕尺寸）
+     * 璋冩暣View鐨勫楂橈紝浣?涓瑙堝悓鏃舵樉绀猴紙闄愬埗涓嶈秴杩囧睆骞曞昂瀵革級
      */
     private ViewGroup.LayoutParams adjustPreviewViewSize(View rgbPreview, View previewView, FaceRectView faceRectView, Camera.Size previewSize, int displayOrientation, float scale) {
         ViewGroup.LayoutParams layoutParams = previewView.getLayoutParams();
@@ -336,7 +343,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
     }
 
     /**
-     * 调整View的宽高，不限制屏幕尺寸，用于放大画面
+     * 璋冩暣View鐨勫楂橈紝涓嶉檺鍒跺睆骞曞昂瀵革紝鐢ㄤ簬鏀惧ぇ鐢婚潰
      */
     private ViewGroup.LayoutParams adjustPreviewViewSizeNoLimit(View rgbPreview, View previewView, FaceRectView faceRectView, Camera.Size previewSize, int displayOrientation, float scale) {
         ViewGroup.LayoutParams layoutParams = previewView.getLayoutParams();
@@ -354,7 +361,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
             layoutParams.width = (int) (measuredHeight * ratio);
         }
 
-        // 应用缩放比例（不限制屏幕尺寸）
+        // 搴旂敤缂╂斁姣斾緥锛堜笉闄愬埗灞忓箷灏哄锛?
         layoutParams.width = (int) (layoutParams.width * scale);
         layoutParams.height = (int) (layoutParams.height * scale);
 
@@ -370,49 +377,50 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
                 runOnUiThread(() -> {
                     Camera.Size previewSizeRgb = camera.getParameters().getPreviewSize();
 
-                    // 获取屏幕尺寸
+                    // Get screen dimensions
                     DisplayMetrics displayMetrics = new DisplayMetrics();
                     getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 
-                    // 计算目标尺寸：宽度充满屏幕，高度为屏幕的2/3
+                    // 璁＄畻鐩爣灏哄锛氬搴﹀厖婊″睆骞曪紝楂樺害涓哄睆骞曠殑2/3
                     int targetWidth = displayMetrics.widthPixels;
-                    int targetHeight = (int) (displayMetrics.heightPixels * 2.0 / 3.0);
+                    //int targetHeight = (int) (displayMetrics.heightPixels * 2.0 / 3.0);
+                    int targetHeight = displayMetrics.heightPixels ;
 
                     FrameLayout parentView = ((FrameLayout) binding.dualCameraTexturePreviewRgb.getParent());
 
-                    // 设置父View的尺寸和重力，使内容居中
+                    // 璁剧疆鐖禫iew鐨勫昂瀵稿拰閲嶅姏锛屼娇鍐呭灞呬腑
                     ViewGroup.LayoutParams parentLayoutParams = parentView.getLayoutParams();
                     parentLayoutParams.width = targetWidth;
                     parentLayoutParams.height = targetHeight;
                     parentView.setLayoutParams(parentLayoutParams);
 
-                    // 计算保持宽高比的尺寸（类似CENTER_CROP）
+                    // 璁＄畻淇濇寔瀹介珮姣旂殑灏哄锛堢被浼糃ENTER_CROP锛?
                     float previewRatio = (float) previewSizeRgb.width / (float) previewSizeRgb.height;
                     float targetRatio = (float) targetWidth / (float) targetHeight;
 
                     int finalWidth, finalHeight;
                     if (previewRatio > targetRatio) {
-                        // 相机预览更宽，以高度为基准
+                        // Camera preview is wider, base on height
                         finalHeight = targetHeight;
                         finalWidth = (int) (finalHeight * previewRatio);
                     } else {
-                        // 相机预览更高，以宽度为基准
+                        // Camera preview is taller, base on width
                         finalWidth = targetWidth;
                         finalHeight = (int) (finalWidth / previewRatio);
                     }
 
-                    // 设置TextureView和FaceRectView为相同尺寸
+                    // 璁剧疆TextureView鍜孎aceRectView涓虹浉鍚屽昂瀵?
                     ViewGroup.LayoutParams textureParams = binding.dualCameraTexturePreviewRgb.getLayoutParams();
                     textureParams.width = finalWidth;
                     textureParams.height = finalHeight;
                     binding.dualCameraTexturePreviewRgb.setLayoutParams(textureParams);
 
-                    // 设置LayoutGravity使TextureView居中
+                    // 璁剧疆LayoutGravity浣縏extureView灞呬腑
                     FrameLayout.LayoutParams textureLayoutParams = (FrameLayout.LayoutParams) binding.dualCameraTexturePreviewRgb.getLayoutParams();
                     textureLayoutParams.gravity = android.view.Gravity.CENTER;
                     binding.dualCameraTexturePreviewRgb.setLayoutParams(textureLayoutParams);
 
-                    // FaceRectView使用相同尺寸和位置
+                    // FaceRectView浣跨敤鐩稿悓灏哄鍜屼綅缃?
                     ViewGroup.LayoutParams faceRectParams = binding.dualCameraFaceRectView.getLayoutParams();
                     faceRectParams.width = finalWidth;
                     faceRectParams.height = finalHeight;
@@ -433,13 +441,13 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
                     textViewRgb.setBackgroundColor(getResources().getColor(R.color.color_bg_notification));
                     parentView.addView(textViewRgb);
 
-                    // 创建FaceRectTransformer，使用TextureView的实际显示尺寸
+                    // 鍒涘缓FaceRectTransformer锛屼娇鐢═extureView鐨勫疄闄呮樉绀哄昂瀵?
                     rgbFaceRectTransformer = new FaceRectTransformer(previewSizeRgb.width, previewSizeRgb.height,
                             finalWidth, finalHeight, displayOrientation, cameraId, isMirror,
                             ConfigUtil.isDrawRgbRectHorizontalMirror(RegisterAndRecognizeActivity.this),
                             ConfigUtil.isDrawRgbRectVerticalMirror(RegisterAndRecognizeActivity.this));
 
-                    // 添加recognizeAreaView，在识别区域发生变更时，更新数据给FaceHelper
+                    // 娣诲姞recognizeAreaView锛屽湪璇嗗埆鍖哄煙鍙戠敓鍙樻洿鏃讹紝鏇存柊鏁版嵁缁橣aceHelper
                     if (ConfigUtil.isRecognizeAreaLimited(RegisterAndRecognizeActivity.this)) {
                         if (recognizeAreaView == null) {
                             recognizeAreaView = new RecognizeAreaView(RegisterAndRecognizeActivity.this);
@@ -495,7 +503,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
                 .additionalRotation(previewConfig.getRgbAdditionalDisplayOrientation())
                 .previewSize(recognizeViewModel.loadPreviewSize())
                 .specificCameraId(previewConfig.getRgbCameraId())
-                .isMirror(true)  // 前置摄像头需要镜像显示，才符合用户直觉
+                .isMirror(true)  // Front camera needs mirror display for user intuition
                 .previewOn(binding.dualCameraTexturePreviewRgb)
                 .cameraListener(cameraListener)
                 .build();
@@ -504,7 +512,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
     }
 
     /**
-     * 初始化红外相机，若活体检测类型是可见光活体检测或不启用活体，则不需要启用
+     * 鍒濆鍖栫孩澶栫浉鏈猴紝鑻ユ椿浣撴娴嬬被鍨嬫槸鍙鍏夋椿浣撴娴嬫垨涓嶅惎鐢ㄦ椿浣擄紝鍒欎笉闇€瑕佸惎鐢?
      */
     private void initIrCamera() {
         if (livenessType == LivenessType.RGB || !enableLivenessDetect) {
@@ -573,8 +581,8 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
                 .previewOn(binding.dualCameraTexturePreviewIr)
                 .cameraListener(irCameraListener)
                 .isMirror(ConfigUtil.isDrawIrPreviewHorizontalMirror(this))
-                .previewSize(recognizeViewModel.loadPreviewSize()) //相机预览大小设置，RGB与IR需使用相同大小
-                .additionalRotation(previewConfig.getIrAdditionalDisplayOrientation()) //额外旋转角度
+                .previewSize(recognizeViewModel.loadPreviewSize()) //鐩告満棰勮澶у皬璁剧疆锛孯GB涓嶪R闇€浣跨敤鐩稿悓澶у皬
+                .additionalRotation(previewConfig.getIrAdditionalDisplayOrientation()) //棰濆鏃嬭浆瑙掑害
                 .build();
         irCameraHelper.init();
         try {
@@ -586,12 +594,12 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
 
 
     /**
-     * 绘制RGB、IR画面的实时人脸信息
+     * 缁樺埗RGB銆両R鐢婚潰鐨勫疄鏃朵汉鑴镐俊鎭?
      *
-     * @param facePreviewInfoList RGB画面的实时人脸信息
+     * @param facePreviewInfoList RGB鐢婚潰鐨勫疄鏃朵汉鑴镐俊鎭?
      */
     private void drawPreviewInfo(List<FacePreviewInfo> facePreviewInfoList) {
-        Log.w(TAG,"人脸信息在这里实时绘制66666666666666666");
+        Log.w(TAG,"浜鸿劯淇℃伅鍦ㄨ繖閲屽疄鏃剁粯鍒?6666666666666666");
         if (rgbFaceRectTransformer != null) {
             List<FaceRectView.DrawInfo> rgbDrawInfoList = recognizeViewModel.getDrawInfo(facePreviewInfoList, LivenessType.RGB, openRectInfoDraw);
             binding.dualCameraFaceRectView.drawRealtimeFaceInfo(rgbDrawInfoList);
@@ -623,16 +631,16 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
     }
 
     /**
-     * 将准备注册的状态置为待注册
+     * 灏嗗噯澶囨敞鍐岀殑鐘舵€佺疆涓哄緟娉ㄥ唽
      *
-     * @param view 注册按钮
+     * @param view 娉ㄥ唽鎸夐挳
      */
     public void register(View view) {
         recognizeViewModel.prepareRegister();
     }
 
     /**
-     * 参数配置
+     * 鍙傛暟閰嶇疆
      *
      * @param view
      */
@@ -643,9 +651,9 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
     }
 
     /**
-     * 识别分析界面
+     * 璇嗗埆鍒嗘瀽鐣岄潰
      *
-     * @param view 注册按钮
+     * @param view 娉ㄥ唽鎸夐挳
      */
     public void recognizeDebug(View view) {
         this.actionAfterFinish = NAVIGATE_TO_RECOGNIZE_DEBUG_ACTIVITY;
@@ -654,35 +662,35 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
     }
 
     /**
-     * 管理员登录按钮点击事件（左下角隐藏区域，连续点击 5 次触发）
+     * 绠＄悊鍛樼櫥褰曟寜閽偣鍑讳簨浠讹紙宸︿笅瑙掗殣钘忓尯鍩燂紝杩炵画鐐瑰嚮 5 娆¤Е鍙戯級
      *
-     * @param view 管理员登录按钮
+     * @param view 绠＄悊鍛樼櫥褰曟寜閽?
      */
     public void onAdminClick(View view) {
         long currentTime = System.currentTimeMillis();
-        // 如果在 2 秒内连续点击
+        // If clicked continuously within 2 seconds
         if (currentTime - lastClickTime < 2000) {
             adminClickCount++;
             if (adminClickCount >= ADMIN_CLICK_COUNT) {
-                // 达到 5 次，显示管理员密码验证对话框
+                // After 5 clicks, show admin password dialog
                 adminClickCount = 0;
                 showAdminPasswordDialog();
                 return;
             }
         } else {
-            // 重置点击计数
+            // Reset click count
             adminClickCount = 1;
         }
         lastClickTime = currentTime;
     }
 
     /**
-     * 切换打卡方式
+     * 鍒囨崲鎵撳崱鏂瑰紡
      *
-     * @param view 切换按钮
+     * @param view 鍒囨崲鎸夐挳
      */
     public void switchCheckInMode(View view) {
-        // 切换打卡方式
+        // Switch check-in mode
         switch (currentCheckInMode) {
             case FACE_RECOGNITION:
                 currentCheckInMode = CheckInMode.NFC;
@@ -699,7 +707,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
     }
 
     /**
-     * 更新打卡方式按钮显示
+     * 鏇存柊鎵撳崱鏂瑰紡鎸夐挳鏄剧ず
      */
     private void updateCheckInModeButton() {
         if (btnSwitchCheckInMode == null) {
@@ -723,16 +731,16 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
     }
 
     /**
-     * 处理打卡方式切换
+     * 澶勭悊鎵撳崱鏂瑰紡鍒囨崲
      */
     private void handleCheckInModeChange() {
         switch (currentCheckInMode) {
             case FACE_RECOGNITION:
-                // 恢复相机预览
+                // Resume camera preview
                 resumeCamera();
                 break;
             case NFC:
-                // 检查 NFC 权限
+                // Check NFC permission
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.NFC) != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.NFC}, REQUEST_NFC_PERMISSION);
                 } else {
@@ -740,18 +748,18 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
                 }
                 break;
             case QR_CODE:
-                // 切换到二维码模式，等待扫描枪输入
+                // Switch to QR code mode, wait for scanner input
                 showQrCodeCheckInHint();
                 break;
         }
     }
 
     /**
-     * 显示 NFC 打卡提示
+     * 鏄剧ず NFC 鎵撳崱鎻愮ず
      */
     private void showNfcCheckInHint() {
         if (nfcAdapter == null || !nfcAdapter.isEnabled()) {
-            // 使用 USB NFC 读卡器模式（模拟键盘输出），不需要原生 NFC
+            // 浣跨敤 USB NFC 璇诲崱鍣ㄦā寮忥紙妯℃嫙閿洏杈撳嚭锛夛紝涓嶉渶瑕佸師鐢?NFC
             showToast(getString(R.string.waiting_nfc_card_input));
         } else {
             showToast(getString(R.string.waiting_nfc_card_input));
@@ -759,13 +767,13 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
     }
 
     /**
-     * 显示二维码打卡提示
+     * 鏄剧ず浜岀淮鐮佹墦鍗℃彁绀?
      */
     private void showQrCodeCheckInHint() {
-        // 暂停相机以节省资源
+        // Pause camera to save resources
         pauseCamera();
         showToast(getString(R.string.waiting_qr_code_input));
-        // 请求焦点到隐藏的 EditText，准备接收扫描枪输入
+        // Request focus to hidden EditText, ready to receive scanner input
         if (qrCodeInputEditText != null) {
             qrCodeInputEditText.requestFocus();
             qrCodeInputEditText.requestFocusFromTouch();
@@ -773,7 +781,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
     }
 
     /**
-     * 显示管理员密码验证对话框
+     * 鏄剧ず绠＄悊鍛樺瘑鐮侀獙璇佸璇濇
      */
     private void showAdminPasswordDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -788,7 +796,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
             String password = input.getText().toString();
             if (ADMIN_PASSWORD.equals(password)) {
                 showToast(getString(R.string.admin_password_success));
-                // 跳转到主界面（管理菜单）
+                // Navigate to main interface (management menu)
                 navigateToNewPage(HomeActivity.class);
             } else {
                 showToast(getString(R.string.admin_password_wrong));
@@ -802,7 +810,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
     }
 
     /**
-     * 在{@link ActivityRegisterAndRecognizeBinding#dualCameraTexturePreviewRgb}第一次布局完成后，去除该监听，并且进行引擎和相机的初始化
+     * 鍦▄@link ActivityRegisterAndRecognizeBinding#dualCameraTexturePreviewRgb}绗竴娆″竷灞€瀹屾垚鍚庯紝鍘婚櫎璇ョ洃鍚紝骞朵笖杩涜寮曟搸鍜岀浉鏈虹殑鍒濆鍖?
      */
     @Override
     public void onGlobalLayout() {
@@ -849,34 +857,34 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
     }
 
     /**
-     * 初始化 NFC
+     * 鍒濆鍖?NFC
      */
     private void initNfc() {
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
         if (nfcAdapter == null) {
-            Log.w(TAG, "NFC 不可用");
+            Log.w(TAG, "NFC disabled");
             return;
         }
         if (!nfcAdapter.isEnabled()) {
-            Log.w(TAG, "NFC 未启用");
+            Log.w(TAG, "NFC disabled");
         }
     }
 
     /**
-     * 初始化二维码输入（隐藏的 EditText 用于接收虚拟键盘输入）
+     * 鍒濆鍖栦簩缁寸爜杈撳叆锛堥殣钘忕殑 EditText 鐢ㄤ簬鎺ユ敹铏氭嫙閿洏杈撳叆锛?
      */
     private void initQrCodeInput() {
-        // 创建一个隐藏的 EditText 来接收扫描枪输入
+        // Create a hidden EditText to receive scanner input
         qrCodeInputEditText = new EditText(this);
         qrCodeInputEditText.setVisibility(View.GONE);
-        qrCodeInputEditText.setInputType(EditorInfo.TYPE_NULL);  // 接收任何输入
+        qrCodeInputEditText.setInputType(EditorInfo.TYPE_NULL);  // 鎺ユ敹浠讳綍杈撳叆
 
-        // 监听输入完成
+        // Listen for input completion
         qrCodeInputEditText.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE ||
                 (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN)) {
                 String qrCodeContent = qrCodeInputEditText.getText().toString();
-                qrCodeInputEditText.setText("");  // 清空输入
+                qrCodeInputEditText.setText("");  // Clear input
                 if (currentCheckInMode == CheckInMode.QR_CODE && qrCodeContent != null && !qrCodeContent.isEmpty()) {
                     handleQrCodeCheckIn(qrCodeContent);
                 }
@@ -885,63 +893,97 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
             return false;
         });
 
-        // 将 EditText 添加到 FrameLayout 根布局
+        // Add EditText to FrameLayout root layout
         binding.dualCameraLlParent.addView(qrCodeInputEditText);
     }
 
     /**
-     * 处理二维码打卡（使用虚拟键盘输入）
+     * 澶勭悊浜岀淮鐮佹墦鍗★紙浣跨敤铏氭嫙閿洏杈撳叆锛?
      */
     private void handleQrCodeCheckIn(String qrCodeContent) {
-        if (qrCodeContent != null && !qrCodeContent.isEmpty()) {
+        if (qrCodeContent != null && !qrCodeContent.trim().isEmpty()) {
             Log.i(TAG, "QR Code content: " + qrCodeContent);
-            showToast(getString(R.string.qr_code_check_in_success) + ": " + qrCodeContent);
+            submitTextCheckIn(qrCodeContent.trim(), "QR_CODE");
         } else {
             showToast(getString(R.string.qr_code_invalid));
+            restoreFaceRecognitionMode();
         }
-        // 打卡完成后切换回人脸识别
-        currentCheckInMode = CheckInMode.FACE_RECOGNITION;
-        updateCheckInModeButton();
-        resumeCamera();
     }
 
     /**
-     * 处理 NFC 打卡（通过键盘模拟输出）
+     * 澶勭悊 NFC 鎵撳崱锛堥€氳繃閿洏妯℃嫙杈撳嚭锛?
      */
     private void handleNfcCheckInByContent(String content) {
-        if (content != null && !content.isEmpty()) {
+        if (content != null && !content.trim().isEmpty()) {
             Log.i(TAG, "NFC Check-in content: " + content);
-            showToast(getString(R.string.nfc_check_in_success) + ": " + content);
-            // 这里可以添加实际的打卡逻辑
-            // 例如：recognizeViewModel.recordNfcCheckIn(content);
+            submitTextCheckIn(content.trim(), "NFC");
         } else {
             showToast(getString(R.string.nfc_check_in_failed));
+            restoreFaceRecognitionMode();
         }
-        // 打卡完成后切换回人脸识别
-        currentCheckInMode = CheckInMode.FACE_RECOGNITION;
-        updateCheckInModeButton();
-        resumeCamera();
     }
 
     /**
-     * 处理 NFC 打卡（原生 NFC 标签）
+     * 澶勭悊 NFC 鎵撳崱锛堝師鐢?NFC 鏍囩锛?
      */
     private void handleNfcCheckIn(Tag tag) {
         if (tag != null) {
             String tagId = bytesToHex(tag.getId());
             Log.i(TAG, "NFC Tag ID: " + tagId);
-            showToast(getString(R.string.nfc_check_in_success) + ": " + tagId);
+            submitTextCheckIn(tagId, "NFC");
         } else {
             showToast(getString(R.string.nfc_check_in_failed));
+            restoreFaceRecognitionMode();
         }
-        // 打卡完成后切换回人脸识别
+    }
+
+    private void submitTextCheckIn(String employeeNo, String source) {
+        if (attendanceService == null) {
+            attendanceService = AttendanceService.getInstance(this);
+        }
+
+        attendanceService.checkByEmployeeNo(employeeNo, null, source)
+                .subscribe(new SingleObserver<CheckResult>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+                    }
+
+                    @Override
+                    public void onSuccess(CheckResult result) {
+                        runOnUiThread(() -> {
+                            if (result != null && result.isSuccess()) {
+                                AudioPlayer.getInstance(RegisterAndRecognizeActivity.this).playPunchSuccess();
+                                showToast(result.getMessage());
+                            } else if (result != null) {
+                                AudioPlayer.getInstance(RegisterAndRecognizeActivity.this).playAlreadyPunched();
+                                showToast(result.getError());
+                            } else {
+                                showToast(getString(R.string.qr_code_invalid));
+                            }
+                            restoreFaceRecognitionMode();
+                        });
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e(TAG, "Text check-in failed", e);
+                        runOnUiThread(() -> {
+                            AudioPlayer.getInstance(RegisterAndRecognizeActivity.this).playAlreadyPunched();
+                            showToast("打卡失败: " + e.getMessage());
+                            restoreFaceRecognitionMode();
+                        });
+                    }
+                });
+    }
+
+    private void restoreFaceRecognitionMode() {
         currentCheckInMode = CheckInMode.FACE_RECOGNITION;
         updateCheckInModeButton();
         resumeCamera();
     }
 
     /**
-     * 字节数组转十六进制字符串
+     * 瀛楄妭鏁扮粍杞崄鍏繘鍒跺瓧绗︿覆
      */
     private String bytesToHex(byte[] bytes) {
         StringBuilder result = new StringBuilder();
@@ -952,15 +994,15 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
     }
 
     /**
-     * 将键值转成对应的 ASCII 码（用于 NFC 读卡器模拟键盘输出）
+     * 灏嗛敭鍊艰浆鎴愬搴旂殑 ASCII 鐮侊紙鐢ㄤ簬 NFC 璇诲崱鍣ㄦā鎷熼敭鐩樿緭鍑猴級
      */
     public char getCharByKeyCode(int keyCode) {
         char outChar = 0;
 
-        if (keyCode > 6 && keyCode < 17) // 数字
+        if (keyCode > 6 && keyCode < 17) // 鏁板瓧
             outChar = (char) ((keyCode - 7) + 0x30);
 
-        if (keyCode > 28 && keyCode < 55) // 字母
+        if (keyCode > 28 && keyCode < 55) // 瀛楁瘝
             outChar = (char) ((keyCode - 29) + 0x41);
 
         return outChar;
@@ -969,7 +1011,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        // 处理 NFC 标签（原生 NFC）
+        // Handle NFC tag (native NFC)
         if (NfcAdapter.ACTION_TAG_DISCOVERED.equals(intent.getAction()) ||
             NfcAdapter.ACTION_TECH_DISCOVERED.equals(intent.getAction()) ||
             NfcAdapter.ACTION_NDEF_DISCOVERED.equals(intent.getAction())) {
@@ -980,11 +1022,11 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
-        // 处理 NFC 读卡器模拟键盘输出（USB NFC 读卡器）
+        // Handle NFC reader keyboard simulation (USB NFC reader)
         if (currentCheckInMode == CheckInMode.NFC) {
             if (event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
                 if (nfcKeyContent.length() > 0) {
-                    // 显示读取到的内容
+                    // Display read content
                     Log.i(TAG, "NFC content: " + nfcKeyContent);
                     showToast(nfcKeyContent);
                     handleNfcCheckInByContent(nfcKeyContent);
@@ -994,7 +1036,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
                 int keyCode = event.getKeyCode();
                 char keyChar = getCharByKeyCode(keyCode);
 
-                if (keyChar != 0) { // 确保是有效的字符
+                if (keyChar != 0) { // Ensure valid character
                     if (nfcGetFlag) {
                         nfcKeyContent += keyChar;
                         nfcGetFlag = false;
@@ -1003,12 +1045,12 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
                     }
                 }
             }
-            return true;  // 消费掉这个事件
+            return true;  // Consume the event
         }
 
-        // 处理扫描枪的硬键盘事件（二维码模式）
+        // Handle scanner hardware keyboard events (QR code mode)
         if (currentCheckInMode == CheckInMode.QR_CODE && qrCodeInputEditText != null) {
-            // 将事件转发给隐藏的 EditText
+            // Forward event to hidden EditText
             return qrCodeInputEditText.dispatchKeyEvent(event);
         }
         return super.dispatchKeyEvent(event);
@@ -1028,3 +1070,4 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
         }
     }
 }
+

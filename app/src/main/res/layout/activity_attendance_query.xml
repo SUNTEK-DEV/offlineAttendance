@@ -2,83 +2,88 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="#0a0a1a"
+    android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- 标题 -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Attendance Management"
-        android:textSize="24sp"
-        android:textColor="#00FFFF"
-        android:textStyle="bold"
         android:gravity="center"
-        android:padding="16dp" />
+        android:padding="16dp"
+        android:text="Attendance Management"
+        android:textColor="#00FFFF"
+        android:textSize="24sp"
+        android:textStyle="bold" />
 
-    <!-- 科技时钟 -->
     <com.arcsoft.arcfacedemo.widget.TechClockView
         android:id="@+id/tech_clock"
         android:layout_width="match_parent"
         android:layout_height="120dp"
         android:layout_marginBottom="16dp" />
 
-    <!-- 提示信息 -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Note: Please use [Face Attendance] for check-in. Employee management is in [Employee Management]"
-        android:textSize="14sp"
-        android:textColor="#00CCCC"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_tech_card"
         android:gravity="center"
         android:padding="12dp"
-        android:background="@drawable/bg_tech_card"
-        android:layout_marginBottom="16dp" />
+        android:text="Note: Please use [Face Attendance] for check-in. Employee management is in [Employee Management]"
+        android:textColor="#00CCCC"
+        android:textSize="14sp" />
 
-    <!-- 查询功能按钮 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="8dp">
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal">
 
         <Button
             android:id="@+id/btn_list_employees"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
             android:layout_weight="1"
-            android:text="Employee List"
             android:background="@drawable/bg_tech_button"
-            android:textColor="#00FFFF"
-            android:layout_marginEnd="8dp" />
+            android:text="Employee List"
+            android:textColor="#00FFFF" />
 
         <Button
             android:id="@+id/btn_query_records"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
             android:layout_weight="1"
-            android:text="Attendance Records"
             android:background="@drawable/bg_tech_button"
-            android:textColor="#00FFFF"
-            android:layout_marginStart="8dp" />
+            android:text="Attendance Records"
+            android:textColor="#00FFFF" />
     </LinearLayout>
 
     <Button
         android:id="@+id/btn_generate_report"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Generate Attendance Report"
+        android:layout_marginTop="8dp"
         android:background="@drawable/bg_tech_button"
-        android:textColor="#00FFFF"
-        android:layout_marginTop="8dp" />
+        android:text="Generate Attendance Report"
+        android:textColor="#00FFFF" />
 
-    <!-- 结果显示区域 -->
+    <Button
+        android:id="@+id/btn_export_excel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_tech_button"
+        android:enabled="false"
+        android:text="Export Report to Excel"
+        android:textColor="#00FFFF" />
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
         android:layout_marginTop="16dp"
+        android:layout_weight="1"
         android:background="@drawable/bg_tech_card"
         android:padding="16dp">
 
@@ -86,10 +91,10 @@
             android:id="@+id/tv_result"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Query results will be displayed here...\n\nClick buttons above to view employee list or attendance records"
-            android:textSize="14sp"
+            android:lineSpacingExtra="4dp"
+            android:text="Query results will be displayed here...&#10;&#10;Click buttons above to view employee list or attendance records"
             android:textColor="#00CCCC"
-            android:lineSpacingExtra="4dp" />
+            android:textSize="14sp" />
     </ScrollView>
 
 </LinearLayout>

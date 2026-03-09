@@ -489,8 +489,8 @@ PunchResponse {
 
 ## 📞 技术支持
 
-**ArcSoft 官网**: https://www.arcsoft.com/
-**视觉开放平台**: https://ai.arcsoft.com/
+**SUNTEK 团队**: support@suntekai.com
+support@suntekai.com
 
 ---
 

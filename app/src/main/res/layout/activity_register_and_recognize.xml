@@ -8,11 +8,11 @@
         android:layout_height="match_parent"
         android:background="#000000">
 
-        <!-- 科技感渐变背景 -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@drawable/bg_tech_gradient" />
+        <!-- Tech gradient background   背景：bg_tech_gradient -->
+<!--        <View-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="match_parent"-->
+<!--             />-->
 
         <FrameLayout
             android:id="@+id/camera_preview_container"
@@ -31,7 +31,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
 
-            <!-- 科技感扫描线 -->
+            <!-- Tech scan line -->
             <View
                 android:id="@+id/scan_line"
                 android:layout_width="match_parent"
@@ -39,7 +39,7 @@
                 android:background="@drawable/bg_scan_line"
                 android:visibility="gone" />
 
-            <!-- 四角科技装饰 -->
+            <!-- Four corner tech decorations -->
             <View
                 android:layout_width="40dp"
                 android:layout_height="40dp"
@@ -88,7 +88,7 @@
 
         </FrameLayout>
 
-        <!-- RecyclerView用于显示识别结果列表 - 放在较早位置，不覆盖控制按钮 -->
+        <!-- RecyclerView for recognition result list -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/dual_camera_recycler_view_person"
             android:layout_width="match_parent"
@@ -98,7 +98,7 @@
             android:focusableInTouchMode="false"
             app:compareResultList="@{compareResultList}" />
 
-        <!-- 顶部状态栏 -->
+        <!-- Top status bar -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -132,14 +132,14 @@
 
         </LinearLayout>
 
-        <!-- 底部控制按钮区域 -->
+        <!-- Bottom control button area -->
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:padding="16dp">
 
-            <!-- 左下角隐藏管理员区域（连续点击 5 次触发） -->
+            <!-- Hidden admin area in bottom left (triggered by 5 consecutive clicks) -->
             <View
                 android:id="@+id/btn_admin_login"
                 android:layout_width="100dp"
@@ -148,7 +148,7 @@
                 android:onClick="onAdminClick"
                 android:background="@android:color/transparent" />
 
-            <!-- 右下角切换打卡方式按钮 -->
+            <!-- Switch check-in mode button in bottom right -->
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -175,7 +175,7 @@
             </LinearLayout>
         </FrameLayout>
 
-        <!-- 识别结果提示 -->
+        <!-- Recognition result notification -->
         <TextView
             android:id="@+id/recognize_notice"
             android:layout_width="wrap_content"
