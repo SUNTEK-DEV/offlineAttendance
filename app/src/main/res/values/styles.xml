@@ -15,6 +15,8 @@
         <item name="colorAccent">@color/colorAccent</item>
         <item name="windowNoTitle">true</item>
         <item name="android:windowFullscreen">true</item>
+        <!-- 启动背景图 -->
+        <item name="android:windowBackground">@drawable/open</item>
     </style>
 
     <style name="AppTheme.NoActionBar">
@@ -25,6 +27,13 @@
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <!-- Splash Screen Theme -->
+    <style name="SplashTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowBackground">@drawable/open</item>
+    </style>
 
     <style name="HintErrorTextStyle" parent="TextAppearance.AppCompat">
     　　<item name="android:textColor">@android:color/holo_red_dark</item>

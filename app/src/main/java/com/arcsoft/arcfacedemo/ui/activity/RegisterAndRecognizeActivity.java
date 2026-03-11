@@ -61,20 +61,10 @@ import io.reactivex.disposables.Disposable;
 public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTreeObserver.OnGlobalLayoutListener {
     private static final String TAG = "RegisterAndRecognize";
 
-    // Check-in mode enumeration
-    private enum CheckInMode {
-        FACE_RECOGNITION,  // Face Recognition
-        NFC,              // NFC Check-in
-        QR_CODE           // QR Code Check-in
-    }
-
-    private CheckInMode currentCheckInMode = CheckInMode.FACE_RECOGNITION;
     private static final String ADMIN_PASSWORD = "123456";  // Admin password
     private static final int ADMIN_CLICK_COUNT = 5;  // Admin verification click count
     private int adminClickCount = 0;  // Current click count
     private long lastClickTime = 0;   // Last click time
-
-    private Button btnSwitchCheckInMode;
 
     // NFC related
     private NfcAdapter nfcAdapter;
@@ -87,6 +77,11 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
     // QR code input related (virtual keyboard)
     private EditText qrCodeInputEditText;
     private AttendanceService attendanceService;
+
+    // 打卡 cooldown 防止重复打卡（与 ViewModel 共享）
+    private static final long PUNCH_COOLDOWN_MS = 3000; // 3 秒
+    private long lastPunchTime = 0;
+    private String lastPunchEmployeeNo = ""; // 上次打卡的工号
 
     private DualCameraHelper rgbCameraHelper;
     private DualCameraHelper irCameraHelper;
@@ -141,7 +136,6 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
 
         initView();
         initNfc();
-        updateCheckInModeButton();
         initQrCodeInput();
         openRectInfoDraw = true;
         recognizeViewModel.setDrawRectInfoTextValue(true);
@@ -361,7 +355,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
             layoutParams.width = (int) (measuredHeight * ratio);
         }
 
-        // 搴旂敤缂╂斁姣斾緥锛堜笉闄愬埗灞忓箷灏哄锛?
+
         layoutParams.width = (int) (layoutParams.width * scale);
         layoutParams.height = (int) (layoutParams.height * scale);
 
@@ -381,20 +375,20 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
                     DisplayMetrics displayMetrics = new DisplayMetrics();
                     getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 
-                    // 璁＄畻鐩爣灏哄锛氬搴﹀厖婊″睆骞曪紝楂樺害涓哄睆骞曠殑2/3
+
                     int targetWidth = displayMetrics.widthPixels;
                     //int targetHeight = (int) (displayMetrics.heightPixels * 2.0 / 3.0);
                     int targetHeight = displayMetrics.heightPixels ;
 
                     FrameLayout parentView = ((FrameLayout) binding.dualCameraTexturePreviewRgb.getParent());
 
-                    // 璁剧疆鐖禫iew鐨勫昂瀵稿拰閲嶅姏锛屼娇鍐呭灞呬腑
+
                     ViewGroup.LayoutParams parentLayoutParams = parentView.getLayoutParams();
                     parentLayoutParams.width = targetWidth;
                     parentLayoutParams.height = targetHeight;
                     parentView.setLayoutParams(parentLayoutParams);
 
-                    // 璁＄畻淇濇寔瀹介珮姣旂殑灏哄锛堢被浼糃ENTER_CROP锛?
+
                     float previewRatio = (float) previewSizeRgb.width / (float) previewSizeRgb.height;
                     float targetRatio = (float) targetWidth / (float) targetHeight;
 
@@ -685,86 +679,15 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
     }
 
     /**
-     * 鍒囨崲鎵撳崱鏂瑰紡
+     * Switch check-in mode (auto-detect)
      *
-     * @param view 鍒囨崲鎸夐挳
+     * @param view switch button
      */
     public void switchCheckInMode(View view) {
-        // Switch check-in mode
-        switch (currentCheckInMode) {
-            case FACE_RECOGNITION:
-                currentCheckInMode = CheckInMode.NFC;
-                break;
-            case NFC:
-                currentCheckInMode = CheckInMode.QR_CODE;
-                break;
-            case QR_CODE:
-                currentCheckInMode = CheckInMode.FACE_RECOGNITION;
-                break;
-        }
-        updateCheckInModeButton();
-        handleCheckInModeChange();
+        // Auto-detect mode: face recognition by default, NFC/QR auto-handled
+        showToast("默认识别人脸打卡，NFC/二维码自动检测");
     }
 
-    /**
-     * 鏇存柊鎵撳崱鏂瑰紡鎸夐挳鏄剧ず
-     */
-    private void updateCheckInModeButton() {
-        if (btnSwitchCheckInMode == null) {
-            btnSwitchCheckInMode = findViewById(R.id.btn_switch_check_in_mode);
-        }
-        if (btnSwitchCheckInMode != null) {
-            String modeText = "";
-            switch (currentCheckInMode) {
-                case FACE_RECOGNITION:
-                    modeText = getString(R.string.face_recognition);
-                    break;
-                case NFC:
-                    modeText = getString(R.string.nfc_check_in);
-                    break;
-                case QR_CODE:
-                    modeText = getString(R.string.qr_code_check_in);
-                    break;
-            }
-            btnSwitchCheckInMode.setText(modeText);
-        }
-    }
-
-    /**
-     * 澶勭悊鎵撳崱鏂瑰紡鍒囨崲
-     */
-    private void handleCheckInModeChange() {
-        switch (currentCheckInMode) {
-            case FACE_RECOGNITION:
-                // Resume camera preview
-                resumeCamera();
-                break;
-            case NFC:
-                // Check NFC permission
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.NFC) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.NFC}, REQUEST_NFC_PERMISSION);
-                } else {
-                    showNfcCheckInHint();
-                }
-                break;
-            case QR_CODE:
-                // Switch to QR code mode, wait for scanner input
-                showQrCodeCheckInHint();
-                break;
-        }
-    }
-
-    /**
-     * 鏄剧ず NFC 鎵撳崱鎻愮ず
-     */
-    private void showNfcCheckInHint() {
-        if (nfcAdapter == null || !nfcAdapter.isEnabled()) {
-            // 浣跨敤 USB NFC 璇诲崱鍣ㄦā寮忥紙妯℃嫙閿洏杈撳嚭锛夛紝涓嶉渶瑕佸師鐢?NFC
-            showToast(getString(R.string.waiting_nfc_card_input));
-        } else {
-            showToast(getString(R.string.waiting_nfc_card_input));
-        }
-    }
 
     /**
      * 鏄剧ず浜岀淮鐮佹墦鍗℃彁绀?
@@ -781,7 +704,7 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
     }
 
     /**
-     * 鏄剧ず绠＄悊鍛樺瘑鐮侀獙璇佸璇濇
+     * 鏄剧ずAdmin password dialog
      */
     private void showAdminPasswordDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -879,13 +802,13 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
         qrCodeInputEditText.setVisibility(View.GONE);
         qrCodeInputEditText.setInputType(EditorInfo.TYPE_NULL);  // 鎺ユ敹浠讳綍杈撳叆
 
-        // Listen for input completion
+        // Listen for input completion - always listen, no mode switch needed
         qrCodeInputEditText.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_DONE ||
                 (event != null && event.getKeyCode() == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_DOWN)) {
                 String qrCodeContent = qrCodeInputEditText.getText().toString();
                 qrCodeInputEditText.setText("");  // Clear input
-                if (currentCheckInMode == CheckInMode.QR_CODE && qrCodeContent != null && !qrCodeContent.isEmpty()) {
+                if (qrCodeContent != null && !qrCodeContent.isEmpty()) {
                     handleQrCodeCheckIn(qrCodeContent);
                 }
                 return true;
@@ -901,12 +824,14 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
      * 澶勭悊浜岀淮鐮佹墦鍗★紙浣跨敤铏氭嫙閿洏杈撳叆锛?
      */
     private void handleQrCodeCheckIn(String qrCodeContent) {
+        long now = System.currentTimeMillis();
+        if (now - lastPunchTime < PUNCH_COOLDOWN_MS) {
+            Log.d(TAG, "QR code punch cooldown, skip");
+            return;
+        }
         if (qrCodeContent != null && !qrCodeContent.trim().isEmpty()) {
             Log.i(TAG, "QR Code content: " + qrCodeContent);
             submitTextCheckIn(qrCodeContent.trim(), "QR_CODE");
-        } else {
-            showToast(getString(R.string.qr_code_invalid));
-            restoreFaceRecognitionMode();
         }
     }
 
@@ -914,12 +839,14 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
      * 澶勭悊 NFC 鎵撳崱锛堥€氳繃閿洏妯℃嫙杈撳嚭锛?
      */
     private void handleNfcCheckInByContent(String content) {
+        long now = System.currentTimeMillis();
+        if (now - lastPunchTime < PUNCH_COOLDOWN_MS) {
+            Log.d(TAG, "NFC punch cooldown, skip");
+            return;
+        }
         if (content != null && !content.trim().isEmpty()) {
             Log.i(TAG, "NFC Check-in content: " + content);
             submitTextCheckIn(content.trim(), "NFC");
-        } else {
-            showToast(getString(R.string.nfc_check_in_failed));
-            restoreFaceRecognitionMode();
         }
     }
 
@@ -927,13 +854,15 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
      * 澶勭悊 NFC 鎵撳崱锛堝師鐢?NFC 鏍囩锛?
      */
     private void handleNfcCheckIn(Tag tag) {
+        long now = System.currentTimeMillis();
+        if (now - lastPunchTime < PUNCH_COOLDOWN_MS) {
+            Log.d(TAG, "NFC tag punch cooldown, skip");
+            return;
+        }
         if (tag != null) {
             String tagId = bytesToHex(tag.getId());
             Log.i(TAG, "NFC Tag ID: " + tagId);
             submitTextCheckIn(tagId, "NFC");
-        } else {
-            showToast(getString(R.string.nfc_check_in_failed));
-            restoreFaceRecognitionMode();
         }
     }
 
@@ -960,7 +889,6 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
                             } else {
                                 showToast(getString(R.string.qr_code_invalid));
                             }
-                            restoreFaceRecognitionMode();
                         });
                     }
 
@@ -970,20 +898,14 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
                         runOnUiThread(() -> {
                             AudioPlayer.getInstance(RegisterAndRecognizeActivity.this).playAlreadyPunched();
                             showToast("打卡失败: " + e.getMessage());
-                            restoreFaceRecognitionMode();
                         });
                     }
                 });
     }
 
-    private void restoreFaceRecognitionMode() {
-        currentCheckInMode = CheckInMode.FACE_RECOGNITION;
-        updateCheckInModeButton();
-        resumeCamera();
-    }
 
     /**
-     * 瀛楄妭鏁扮粍杞崄鍏繘鍒跺瓧绗︿覆
+     * Convert byte array to hex string
      */
     private String bytesToHex(byte[] bytes) {
         StringBuilder result = new StringBuilder();
@@ -994,15 +916,15 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
     }
 
     /**
-     * 灏嗛敭鍊艰浆鎴愬搴旂殑 ASCII 鐮侊紙鐢ㄤ簬 NFC 璇诲崱鍣ㄦā鎷熼敭鐩樿緭鍑猴級
+     * Convert key code to ASCII
      */
     public char getCharByKeyCode(int keyCode) {
         char outChar = 0;
 
-        if (keyCode > 6 && keyCode < 17) // 鏁板瓧
+        if (keyCode > 6 && keyCode < 17) // number
             outChar = (char) ((keyCode - 7) + 0x30);
 
-        if (keyCode > 28 && keyCode < 55) // 瀛楁瘝
+        if (keyCode > 28 && keyCode < 55) // letter
             outChar = (char) ((keyCode - 29) + 0x41);
 
         return outChar;
@@ -1023,7 +945,8 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         // Handle NFC reader keyboard simulation (USB NFC reader)
-        if (currentCheckInMode == CheckInMode.NFC) {
+        // Auto-detect NFC: always process NFC reader input
+        if (true) {
             if (event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
                 if (nfcKeyContent.length() > 0) {
                     // Display read content
@@ -1049,8 +972,8 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
         }
 
         // Handle scanner hardware keyboard events (QR code mode)
-        if (currentCheckInMode == CheckInMode.QR_CODE && qrCodeInputEditText != null) {
-            // Forward event to hidden EditText
+        // Auto-detect QR: always forward to QR input
+        if (qrCodeInputEditText != null) {
             return qrCodeInputEditText.dispatchKeyEvent(event);
         }
         return super.dispatchKeyEvent(event);
@@ -1061,11 +984,9 @@ public class RegisterAndRecognizeActivity extends BaseActivity implements ViewTr
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_NFC_PERMISSION) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                showNfcCheckInHint();
+                showToast(getString(R.string.waiting_nfc_card_input));
             } else {
                 showToast(getString(R.string.permission_denied));
-                currentCheckInMode = CheckInMode.FACE_RECOGNITION;
-                updateCheckInModeButton();
             }
         }
     }

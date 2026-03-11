@@ -3,11 +3,13 @@ package com.arcsoft.arcfacedemo;
 import android.app.Application;
 import android.util.Log;
 
+import androidx.multidex.MultiDexApplication;
+
 import com.arcsoft.arcfacedemo.util.debug.DebugInfoDumper;
 import java.io.File;
 import xcrash.XCrash;
 
-public class ArcFaceApplication extends Application {
+public class ArcFaceApplication extends MultiDexApplication {
     private static final String TAG = "首页";
     private static ArcFaceApplication application;
 

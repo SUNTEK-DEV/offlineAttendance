@@ -18,11 +18,11 @@
 
 
     <string-array name="recognize_orient_priority_desc">
-        <item>仅0度</item>
-        <item>仅90度</item>
-        <item>仅180度</item>
-        <item>仅270度</item>
-        <item>全角度</item>
+        <item>only 0 degrees</item>
+        <item>only 90 degrees</item>
+        <item>only 180 degrees</item>
+        <item>only 270 degrees</item>
+        <item>all-round</item>
     </string-array>
 
     <!-- 识别最大人数 -->

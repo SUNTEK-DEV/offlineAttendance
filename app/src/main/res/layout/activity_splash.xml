@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/splash_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <!-- GIF 动画 -->
+    <ImageView
+        android:id="@+id/splash_logo"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:src="@drawable/open"
+        android:contentDescription="App Logo"
+        app:layout_constraintBottom_toTopOf="@+id/splash_title"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
